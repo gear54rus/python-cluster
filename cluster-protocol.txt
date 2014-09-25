@@ -1,0 +1,38 @@
+Message types:
+Accept: 0x1
+Reject: 0x2
+Join: 0x3
+Leave: 0x4
+Status: 0x5
+Task: 0x6
+Start: 0x7
+Stop: 0x8
+Finished: 0x9
+
+Status values: 0x1 (idle) 0x2 (waiting for input) 0x3 (ready to start) 0x4 (working)
+
+Node ================================================================== Owner   
+Join[1]:length[4]:'version;modules'      ==>
+										 <== Accept[1] | Reject[1]:length[4]:'reason' Node status: idle
+				........................................
+										 <== Status[1]
+Status[1]:status value[1]           	 ==>
+
+====================== IF IDLE ============================================= 
+									     <== Task[1]:length[4]:'code'             
+Accept[1] | Reject[1]:length[4]:'reason' ==>                                  Node status: waiting for input
+
+====================== IF ACCEPT ============================================
+										 <== Task[1]:length[4]:parameters
+Accept[1] | Reject[1]:length[4]:'reason' ==>								  Node status: ready to start
+
+====================== IF ACCEPT ============================================
+										 <== Start[1]
+Accept[1]:length[4]:now | Reject[1]:length[4]:'reason' ==>                                  Node status: working
+			........................................
+Finished[1]:length[4]:now,'result'           ==>
+                                         <== Accept[1]
+			........................................
+Leave[1]								 ==>
+										 <== Accept[1]
+										 
