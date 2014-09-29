@@ -8,6 +8,7 @@ Task: 0x6
 Start: 0x7
 Stop: 0x8
 Finished: 0x9
+Disconnect: 0x10
 
 Status values: 0x1 (idle) 0x2 (waiting for input) 0x3 (ready to start) 0x4 (working)
 
@@ -35,4 +36,6 @@ Finished[1]:length[4]:now,'result'           ==>
 			........................................
 Leave[1]								 ==>
 										 <== Accept[1]
-										 
+========================================================================================									 
+Also, both node and owner can issue Disconnect message at any time:
+Disconnect[1]:length[4]:'reason'
