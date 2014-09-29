@@ -1,0 +1,50 @@
+Message types:
+Accept: 0x1
+Reject: 0x2
+Join: 0x3
+Leave: 0x4
+Status: 0x5
+Task: 0x6
+Wait: 0x7
+Start: 0x8
+Stop: 0x9
+Finished: 0x10
+Result: 0x11
+Disconnect: 0x12
+
+Status values: 0x1 (idle) 0x2 (waiting for input) 0x3 (ready to start) 0x4 (working)
+
+Node ================================================================== Owner   
+Join[1]:length[4]:'version;modules'      ==>
+										 <== Accept[1] | Reject[1]:length[4]:'reason' Node status: idle
+				........................................
+										 <== Status[1]
+Status[1]:status value[1]           	 ==>
+
+====================== IF IDLE  ============================================= 
+										node status: getting info
+====================== TRANSFER FILES ============================
+									     	<== File[1]:length[4]:bytes             
+Accept[1] | Reject[1]:length[4]:'reason' ==>                                  	
+====================== UNTIL ALL FILES TRANSFERED ===========================
+====================== TRANSFER CONTROLS======================================
+										<== run[1]:length[2]:filename:length[2]:logfile / ret[1]:length[2]:filename
+Accept[1] | Reject[1]:length[4]:'reason' ==>  
+====================== UNTIL ALL CONTROLS TRANSFERED ===========================
+====================== ALL INFOS TRANSFERED ==============================
+										<== wait[1]
+										node status: waiting for start
+====================== START ============================================
+										 <== Start[1]
+Accept[1]:length[4]:now | Reject[1]:length[4]:'reason' ==>                                  Node status: working
+====================== FINISHED =========================================
+Finished[1] ==>									node status: finished 
+                                         <== Accept[1]
+====================== RESULTS =========================================
+Result[1]:length[4]:bytesoffile
+====================== LEAVE ===========================================
+Leave[1]								 ==>
+										 <== Accept[1]
+========================================================================================									 
+Also, both node and owner can issue Disconnect message at any time:
+Disconnect[1]:length[4]:'reason'
