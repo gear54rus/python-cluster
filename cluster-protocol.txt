@@ -10,7 +10,7 @@ Stop: 0x8
 Finished: 0x9
 Disconnect: 0x10
 
-Status values: 0x1 (idle) 0x2 (waiting for input) 0x3 (ready to start) 0x4 (working)
+Status values: 0x1 (idle) 0x2 (ready to start) 0x3 (working)
 
 Node ================================================================== Owner   
 Join[1]:length[4]:'version;modules'      ==>
@@ -20,16 +20,12 @@ Join[1]:length[4]:'version;modules'      ==>
 Status[1]:status value[1]           	 ==>
 
 ====================== IF IDLE ============================================= 
-									     <== Task[1]:length[4]:'code'             
-Accept[1] | Reject[1]:length[4]:'reason' ==>                                  Node status: waiting for input
-
-====================== IF ACCEPT ============================================
-										 <== Task[1]:length[4]:parameters
-Accept[1] | Reject[1]:length[4]:'reason' ==>								  Node status: ready to start
+									     <== Task[1]:length[4]:lengthOfParameters[4]:parameters:lengthOfCode[4]:'code'             
+Accept[1] | Reject[1]:length[4]:'reason' ==>                                  Node status: ready to start
 
 ====================== IF ACCEPT ============================================
 										 <== Start[1]
-Accept[1]:length[4]:now | Reject[1]:length[4]:'reason' ==>                                  Node status: working
+Accept[1]:length[4]:now | Reject[1]:length[4]:'reason' ==>                    Node status: working
 			........................................
 Finished[1]:length[4]:now,'result'           ==>
                                          <== Accept[1]
@@ -37,5 +33,7 @@ Finished[1]:length[4]:now,'result'           ==>
 Leave[1]								 ==>
 										 <== Accept[1]
 ========================================================================================									 
-Also, both node and owner can issue Disconnect message at any time:
+Both node and owner can issue Disconnect message at any time:
 Disconnect[1]:length[4]:'reason'
+Node sends packet as on line 20 when its status changes.
+Semicolons are there to denote boundaries, they are never transmitted over the wire.
