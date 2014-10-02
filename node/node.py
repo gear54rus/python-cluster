@@ -3,6 +3,8 @@ import worker
 import messages
 import sys
 import datetime
+import os
+import random
 
 class node:
 
@@ -31,8 +33,7 @@ class node:
                 if self.status == 'idle':
                     self.parametrs = msg['parametrs']
                     self.code = msg['code']
-                    self.codePath = '' #Save path to code here
-
+                    self.codePath = self.createTask(self)
                     self.status = 'ready to start'
                     self.connect.send('Accept')
                 else:
@@ -54,6 +55,33 @@ class node:
         self.connect.send('Disconnect',reason)
         return 1
 
-    def createTask(self,code,parametrs):
-        taskPath = ''
+    def createTask(self):
+        code = self.code
+        parametrs = self.parametrs
+        algName = 'alg.py'
+        curDir = os.getcwd();
+        NumberOfAttempts = 0
+        maxNumberOfAttempts = 10
+        while True:
+            try:
+                salt = random.randint(1,9999)
+                taskFullName = 'task' + salt.__str__()
+                os.makedirs(taskFullName)
+                break
+            except OSError:
+                if NumberOfAttempts < maxNumberOfAttempts:
+                    print("Oops!  That was no valid number.  Try again...")
+                    NumberOfAttempts += 1
+                else:
+                    print("Too many attempts. Break")
+                    break
+        taskPath = curDir + '\\' + taskFullName
+        os.chdir(taskPath)
+        file = open(algName, "w")
+        file.write(code)
+        file.close()
+        file = open("import", "w")
+        file.write(parametrs)
+        file.close()
+        os.chdir(curDir)
         return taskPath
