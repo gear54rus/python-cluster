@@ -9,5 +9,5 @@ class worker:
         os.chdir(pathToAlgDir)
         exec(open(algName).read())
         os.chdir(curDir)
-        return 0
+        return True
 
