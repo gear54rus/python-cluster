@@ -1,4 +1,4 @@
-import struct #для байтстринга
+import struct #??? ???????????
 
 
 messageTypes = {
@@ -11,7 +11,7 @@ messageTypes = {
 'Start' : 0x7,
 'Stop' : 0x8,
 'Finished' : 0x9,
-'Disconnect' : 0x10,
+'Disconnect' : 0xA,
 
 #reverse
 
@@ -24,7 +24,7 @@ messageTypes = {
 0x7 : 'Start',
 0x8 : 'Stop',
 0x9 : 'Finished',
-0x10 : 'Disconnect'
+0xA : 'Disconnect'
 }
 
 def intToBEByteStr(number):
@@ -79,7 +79,7 @@ def readMessage(msg):
     result = {}
     result.update( {'type': getTypeOfMessage(msg) }) 
     msg = msg[1:]
-    #сообщения состоящие только из типа более не обрабатываются
+    #????????? ????????? ?????? ?? ???? ????? ?? ??????????????
     if result['type'] == 'Reject':
         length, msgdata = GetMsgLenData(msg)
         result.update( {'length': length, 'reason': msgdata} )

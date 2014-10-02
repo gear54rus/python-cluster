@@ -8,12 +8,12 @@ Task: 0x6
 Start: 0x7
 Stop: 0x8
 Finished: 0x9
-Disconnect: 0xA
+Disconnect: 0x10
 
 Status values: 0x1 (idle) 0x2 (ready to start) 0x3 (working)
 
 Node ================================================================== Owner   
-Join[1]:length[4]:'version;modules'      ==>
+Join[1]:length[4]:'version(major.minor.micro);modules'      ==>
 										 <== Accept[1] | Reject[1]:length[4]:'reason' Node status: idle
 				........................................
 										 <== Status[1]
