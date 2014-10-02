@@ -1,5 +1,4 @@
-import struct #??? ???????????
-
+import struct 
 
 messageTypes = {
 'Accept' : 0x1,
@@ -35,31 +34,20 @@ def BEByteStrToInt(str):
 
 def createMessage(messTypeName, messData):
     result = false
-    resultMsg = 'message was not sent. Type = ' + messTypeName
     if messTypeName == 'Join':
         result = bytes([messageTypes[messTypeName]]) + intToBEByteStr(len(messData)) + messData.encode('utf-8')
-        return result
     if messTypeName == 'Accept':
         result = bytes([messageTypes[messTypeName]])
-        return result
     if messTypeName == 'Reject':
         result = bytes([messageTypes[messTypeName]]) + intToBEByteStr(len(messData)) + messData.encode('utf-8')
-        return result
     if messTypeName == 'Leave':
         result = bytes([messageTypes[messTypeName]])
-        return result
     if messTypeName == 'Status':
         result = bytes([messageTypes[messTypeName]]) + bytes([messData])
-        return result
     if messTypeName == 'Finished':
         result = bytes([messageTypes[messTypeName]]) + intToBEByteStr(len(messData)) + messData.encode('utf-8')
-        return result
     if messTypeName == 'Disconnect':
         result = bytes([messageTypes[messTypeName]]) + intToBEByteStr(len(messData)) + messData.encode('utf-8')
-        return result
-    if result:
-        resultMsg = 'message sent. Type = ' + messTypeName
-    print(resultMsg)
     return result
 
 def getTypeOfMessage(msg):
@@ -79,7 +67,6 @@ def readMessage(msg):
     result = {}
     result.update( {'type': getTypeOfMessage(msg) }) 
     msg = msg[1:]
-    #????????? ????????? ?????? ?? ???? ????? ?? ??????????????
     if result['type'] == 'Reject':
         length, msgdata = GetMsgLenData(msg)
         result.update( {'length': length, 'reason': msgdata} )
