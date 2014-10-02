@@ -7,8 +7,8 @@ import datetime
 class node:
 
     def __init__(self,ip,port):
-       self.connect = connection(ip, port)
-       self.connect.send('Join', sys.version[0:5])
+       self.connect = connection.connect(ip, port)
+       self.connect.send('Join', sys.version[0:5].__str__())
        self.status = 'disconnected'
        self.codePath = ''
        self.result = ''
@@ -32,6 +32,7 @@ class node:
                     self.parametrs = msg['parametrs']
                     self.code = msg['code']
                     self.codePath = '' #Save path to code here
+
                     self.status = 'ready to start'
                     self.connect.send('Accept')
                 else:
@@ -52,3 +53,7 @@ class node:
     def disconnect(self,reason):
         self.connect.send('Disconnect',reason)
         return 1
+
+    def createTask(self,code,parametrs):
+        taskPath = ''
+        return taskPath
