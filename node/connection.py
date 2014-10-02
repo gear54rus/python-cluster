@@ -36,14 +36,16 @@ class connection:
         if result['type'] == 'Disconnect':
             reason = readLenData()
             result.update( {'reason': reason} )
+        print('CONNECTION: got message, Type = {} '.format(type))
         return result
 
     def sendMessage(type, msg):
         data = messages.createMessage(type,msg)
         if not data:
-            print('message was not sent, Type = {}'.format(type))
+            print('CONNECTION: message was not sent, Type = {}'.format(type))
             return False
         self.sock.send(data)    
+        print('CONNECTION: message sent, Type = {}'.format(type))
         return True 
 
 
