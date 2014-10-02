@@ -10,7 +10,7 @@ Stop: 0x8
 Finished: 0x9
 Disconnect: 0xA
 
-Status values: 0x1 (idle) 0x2 (ready to start) 0x3 (working)
+Status values: 0x1 (idle) 0x2 (ready to start) 0x3 (working) 0x4 (disconnect)
 
 Node ================================================================== Owner   
 Join[1]:length[4]:'version(major.minor.micro);modules'      ==>
