@@ -37,3 +37,4 @@ Both node and owner can issue Disconnect message at any time:
 Disconnect[1]:length[4]:'reason'
 Node sends packet as on line 20 when its status changes.
 Semicolons are there to denote boundaries, they are never transmitted over the wire.
+While technically, message length can be up to 4GB, maximum valid message length is limited to 256MB for convenience of buffer allocation.
