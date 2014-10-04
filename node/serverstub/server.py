@@ -1,5 +1,16 @@
 import socket
 import messages
+#hardcoded messages
+def sendMessage(type, data):
+    if type == 'Accept':
+        conn.send(bytes[messages.createMessage['Accept']])
+    if type == 'Reject':
+        conn.send(bytes[messages.createMessage['Reject', data]])
+    if type == 'Status':
+        conn.send(bytes[messages.createMessage['Status']])
+    if type == 'Start':
+        conn.send(bytes[messages.createMessage['Start']])
+    print('message of type {0} sent'.format(type))
 
 sock = socket.socket()
 sock.bind(('', 9090))
@@ -13,9 +24,10 @@ while True:
     command = input('Enter command:')
     helpC = "Commands list:\nReceive - trying to receive message from client\n Accept - send accept command \nReject - send reject command \nJoin \nLeave\nStatus\nTask\nStart\nStop\nFinished\nDisconnect\nQuit"
     if command == 'Disconnect':
-        conn.close()
+        conn.send(bytes('Disconnect', 'UTF-8'))
         print('Connection closed.')
         print("Waiting for connect.")
+        conn.close()
         sock.listen(1)
         conn, addr = sock.accept()
         print('Connected to ' + addr.__str__())
@@ -36,7 +48,7 @@ while True:
             print('Data received from client. Continue...')
             continue
     if command == 'Accept':
-        sendMessage('Accept')
+        sendMessage('Accept', '')
         continue
     if command == 'Reject':
         reason = 'Unknown reason'
@@ -56,17 +68,9 @@ while True:
     if command == 'Start':
         sendMessage('Start')
         continue
+    else:
+        conn.send(bytes(command, 'UTF-8'))
 
 
 
-#hardcoded messages
-def sendMessage(type, data):
-    if type == 'Accept':
-        conn.send(bytes[messages.createMessage['Accept']])
-    if type == 'Reject':
-        conn.send(bytes[messages.createMessage['Reject', data]])
-    if type == 'Accept':
-        conn.send(bytes[messages.createMessage['Status']])
-    if type == 'Accept':
-        conn.send(bytes[messages.createMessage['Start']])
-    print('message of type {0} sent'.format(type))
+
