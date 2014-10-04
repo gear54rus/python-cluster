@@ -3,14 +3,21 @@ import messages
 
 sock = socket.socket()
 sock.connect(('localhost', 9090))
-
 while True:
-    data = sock.recv(1024)
-    if data.decode('UTF-8') == 'Disconnect':
-        print('Server closed the connection')
-        break
-    if data:
-        print(data)
+    command = input('Enter command:')
+    if command == 'Receive':
+        data = sock.recv(1024)
+        if data.decode('UTF-8') == 'Disconnect':
+            print('Server closed the connection')
+            break
+        if data:
+            print(data)
+        else:
+            print('Server sent empty message')
+    if command == 'Send':
+        sock.send(bytes('Disconnect', 'UTF-8'))
+    continue
+
 
 
 sock.close()

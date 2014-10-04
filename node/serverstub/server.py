@@ -45,7 +45,7 @@ while True:
             print('Can not receive data from client, try again.')
             continue
         else:
-            print('Data received from client. Continue...')
+            print('Data received from client:'+data.decode('UTF-8') + '\nContinue...')
             continue
     if command == 'Accept':
         sendMessage('Accept', '')
