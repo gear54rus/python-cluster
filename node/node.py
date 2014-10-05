@@ -6,6 +6,19 @@ import datetime
 import os
 import random
 
+statusenum = {
+0x1: 'idle',
+0x2: 'ready to start',
+0x3: 'working',
+0x4: 'disconnected',
+
+'idle': 0x1,
+'ready to start': 0x2,
+'working': 0x3,
+'disconnected': 0x4
+}
+
+
 class node:
 
     def __init__(self,ip,port):
@@ -29,7 +42,7 @@ class node:
                 self.status = 'idle'
                 print(msg['reason'])
             if msg['type'] == 'Status':
-                self.connection.sendMessage('Status', self.status)
+                self.connection.sendMessage('Status', statusenum[self.status])
             if msg['type'] == 'Task':
                 if self.status == 'idle':
                     self.parametrs = msg['parametrs']
