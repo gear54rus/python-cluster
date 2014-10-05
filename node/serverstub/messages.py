@@ -32,8 +32,8 @@ def intToBEByteStr(number):
 def BEByteStrToInt(str):
     return struct.unpack('>I', str)[0]
 
-def createMessage(messTypeName, messData):
-    result = false
+def createMessage(messTypeName, messData = ''):
+    result = False
     if messTypeName == 'Join':
         result = bytes([messageTypes[messTypeName]]) + intToBEByteStr(len(messData)) + messData.encode('utf-8')
     if messTypeName == 'Accept':

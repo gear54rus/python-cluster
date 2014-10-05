@@ -1,20 +1,20 @@
 import socket
 import messages
 #hardcoded messages
-def sendMessage(type, data):
+def sendMessage(type , data = ''):
     if type == 'Accept':
-        conn.send(bytes[messages.createMessage['Accept']])
+        conn.send(messages.createMessage('Accept'))
     if type == 'Reject':
-        conn.send(bytes[messages.createMessage['Reject', data]])
+        conn.send(bytes[messages.createMessage('Reject', data)])
     if type == 'Status':
-        conn.send(bytes[messages.createMessage['Status']])
+        conn.send(bytes[messages.createMessage('Status')])
     if type == 'Start':
-        conn.send(bytes[messages.createMessage['Start']])
+        conn.send(bytes[messages.createMessage('Start')])
     print('message of type {0} sent'.format(type))
 
 sock = socket.socket()
-sock.bind(('', 9090))
-print("Waiting for connect.Please, run client")
+sock.bind(('127.0.0.1', 9090))
+print("Waiting for connect. Please, run client")
 sock.listen(1)
 conn, addr = sock.accept()
 
@@ -48,7 +48,7 @@ while True:
             print('Data received from client:'+data.decode('UTF-8') + '\nContinue...')
             continue
     if command == 'Accept':
-        sendMessage('Accept', '')
+        sendMessage('Accept')
         continue
     if command == 'Reject':
         reason = 'Unknown reason'
