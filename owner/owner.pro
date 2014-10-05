@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -12,9 +12,27 @@ TARGET = owner
 TEMPLATE = app
 
 
-SOURCES += main.cpp\
-        mainwindow.cpp
+SOURCES += owner.cpp \
+    ui/mainwindow.cpp \
+    ui/listenwindow.cpp \
+    core/core.cpp \
+    core/task.cpp \
+    core/event.cpp \
+    network/node.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += ui/mainwindow.h \
+    ui/listenwindow.h \
+    core/core.h \
+    core/task.h \
+    core/event.h \
+    network/node.h \
+    global.h
 
-FORMS    += mainwindow.ui
+FORMS    += \
+    ui/listenwindow.ui \
+    ui/mainwindow.ui
+
+CONFIG += c++11
+
+RESOURCES += \
+    resources/resources.qrc
