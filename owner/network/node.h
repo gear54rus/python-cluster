@@ -2,6 +2,7 @@
 #define NODE_H
 
 #include <QObject>
+#include <QQueue>
 #include <QTcpSocket>
 #include <QDataStream>
 #include <QByteArray>
@@ -19,7 +20,7 @@ public:
         Join = 0x3,
         Leave = 0x4,
         Status = 0x5,
-        Task = 0x6,
+        Job = 0x6,
         Start = 0x7,
         Stop = 0x8,
         Finished = 0x9,
@@ -33,10 +34,16 @@ public:
     };
 
     explicit Node(QTcpSocket* socket);
+    void addTask(Task* task);
     ~Node();
 signals:
+    void taskFinished(Task* task);
     void malformedMessage(QString reason);
     void unexpectedMessage(QString reason);
+    void joinError(QString reason);
+    void joined();
+    void left();
+    void statusChanged();
 public slots:
 
 private slots:
@@ -44,6 +51,7 @@ private slots:
 
 private:
     NodeStatus status;
+    QQueue<Task*> tasks;
     QByteArray buffer;
     QTcpSocket* socket;
     struct Message {

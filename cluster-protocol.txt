@@ -4,7 +4,7 @@ Reject: 0x2
 Join: 0x3
 Leave: 0x4
 Status: 0x5
-Task: 0x6
+Job: 0x6
 Start: 0x7
 Stop: 0x8
 Finished: 0x9
@@ -20,7 +20,7 @@ Join[1]:length[4]:'version(major.minor.micro);modules'      ==>
 Status[1]:status value[1]           	 ==>
 
 ====================== IF IDLE ============================================= 
-									     <== Task[1]:length[4]:lengthOfParameters[4]:parameters:lengthOfCode[4]:'code'             
+									     <== Job[1]:length[4]:lengthOfParameters[4]:parameters:lengthOfCode[4]:'code'             
 Accept[1] | Reject[1]:length[4]:'reason' ==>                                  Node status: ready to start
 
 ====================== IF ACCEPT ============================================

@@ -43,7 +43,42 @@ void Core::newTask(Task* task)
 
 void Core::newNode()
 {
-    nodes.append(new Node(server.nextPendingConnection()));
+    Node* node = new Node(server.nextPendingConnection());
+    QObject::connect(node, SIGNAL(taskFinished(Task*)), this, SLOT(nodeTaskFinished(Task*)));
+    QObject::connect(node, SIGNAL(malformedMessage(QString)), this, SLOT(nodeMalformedMessage(QString)));
+    QObject::connect(node, SIGNAL(unexpectedMessage(QString)), this, SLOT(nodeUnexpectedMessage(QString)));
+    QObject::connect(node, SIGNAL(joinError(QString)), this, SLOT(nodeJoinError(QString)));
+    QObject::connect(node, SIGNAL(joined()), this, SLOT(nodeJoined()));
+    QObject::connect(node, SIGNAL(left()), this, SLOT(nodeLeft()));
+    QObject::connect(node, SIGNAL(statusChanged()), this, SLOT(nodeStatusChanged()));
+    nodes.append(node);
+}
+
+void Core::nodeTaskFinished(Task*)
+{
+}
+
+void Core::nodeMalformedMessage(QString reason)
+{
+}
+
+void Core::nodeUnexpectedMessage(QString reason)
+{
+}
+
+void Core::nodeJoinError(QString reason)
+{
+}
+
+void Core::nodeJoined()
+{
+}
+void Core::nodeLeft()
+{
+}
+
+void Core::nodeStatusChanged()
+{
 }
 
 void Core::listen(ListenTask* task)

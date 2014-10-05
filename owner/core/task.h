@@ -51,6 +51,28 @@ public:
     quint16 port;
 };
 
+class AssignTask : public Task {
+public:
+    AssignTask(quint8 nodeID, const QByteArray& input, const QString& code);
+    quint8 nodeID;
+    QByteArray input;
+    QString code;
+};
 
+class StartTask : public Task {
+public:
+    StartTask(quint8 nodeID);
+    quint8 nodeID;
+};
+
+class StopTask : public StartTask {
+public:
+    StopTask(quint8 nodeID);
+};
+
+class KickTask : public StartTask {
+public:
+    KickTask(quint8 nodeID);
+};
 
 #endif // TASK_H

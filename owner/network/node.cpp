@@ -11,9 +11,21 @@ Node::Node(QTcpSocket* socket) :
     QObject::connect(this->socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
 }
 
+void Node::addTask(Task* task)
+{
+    switch(task->getType()) {
+        case Task::Assign: {
+        }
+    }
+    tasks.enqueue(task);
+}
+
 Node::~Node()
 {
     socket->deleteLater();
+    foreach(Task * v, tasks) {
+        delete v;
+    }
 }
 
 void Node::readyRead()
@@ -62,6 +74,7 @@ void Node::Message::reset()
 {
     type = None;
     length = 0;
+    body.clear();
 }
 
 void Node::processMessage()

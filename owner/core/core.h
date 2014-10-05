@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QMutex>
 #include <QList>
+#include <QString>
 #include <QStringList>
 #include <QTcpSocket>
 #include <QTcpServer>
@@ -26,6 +27,14 @@ public slots:
 private slots:
     void newTask(Task* task);
     void newNode();
+    void nodeTaskFinished(Task*);
+    void nodeMalformedMessage(QString reason);
+    void nodeUnexpectedMessage(QString reason);
+    void nodeJoinError(QString reason);
+    void nodeJoined();
+    void nodeLeft();
+    void nodeStatusChanged();
+
 private:
     QMutex m;
     QStringList* nameList;

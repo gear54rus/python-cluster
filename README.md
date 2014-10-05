@@ -1,6 +1,9 @@
-python-cluster
+Python cluster
 ==============
 
-An attempt to make software package which will be able to execute tasks in parallel. Tasks are described in python. 
+An attempt to make software package which will be able to execute tasks described in Python in parallel.
 
-This software consists of cluster node and cluster owner.
+This software consists of cluster node and cluster owner. 
+Owner is written in C++/QT and also requires Python interpreter to execute tasks locally.
+Node is written in Python.
+

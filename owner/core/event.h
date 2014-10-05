@@ -6,11 +6,11 @@ public:
     enum Type {
         None = 0,
         UnexpectedMessage,
+        MalformedMessage,
         JoinError,
         NodeJoined,
         NodeLeft,
         NodeStatusChanged,
-        NodeKicked,
         JobFinished
     };
 
