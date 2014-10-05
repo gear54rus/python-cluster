@@ -1,6 +1,7 @@
 ﻿import socket
 import messages
 import sys
+import struct
 
 class connection:
     def __init__(self, ip, port):
@@ -25,28 +26,30 @@ class connection:
             return buff
         # messages with only type are not processing later
         typeOfMessage = buff
-        result = { messages.getTypeOfMessage(typeOfMessage)}
-        if  'Reject' not in result:
-            reason = readLenData()
+        result = { 'type' : messages.messageTypes[self.byteToInt(buff)]}
+        if  result['type'] == 'Reject':
+            reason = self.readLenData()
             result.update( {'reason': msgdata} )
-        if 'Task' not in result:
-            parametrs = readLenData()
+        if result['type'] == 'Task':
+            parametrs = self.readLenData()
             result.update( {'parametrs': parametrs} )
-            code = readLenData()
+            code = self.readLenData()
             result.update ({'code' : code})
-        if 'Disconnect' not in result:
-            reason = readLenData()
+        if result['type'] == 'Disconnect':
+            reason = self.readLenData()
             result.update( {'reason': reason} )
-        print('CONNECTION: got message, Type = {} '.format(type))
+        print('CONNECTION: got message, Type = {} '.format(result['type']))
         return result
 
     def sendMessage(self, type, msg):
-        data = messages.createMessage(type,msg)
+        data = messages.createMessage(type, msg)
         if not data:
             print('CONNECTION: message was not sent, Type = {}'.format(type))
             return False
         self.sock.send(data)    
         print('CONNECTION: message sent, Type = {}'.format(type))
         return True 
-
+    def byteToInt(self, byte):
+        result = struct.unpack('B', byte)[0]
+        return result
 

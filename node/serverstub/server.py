@@ -5,11 +5,11 @@ def sendMessage(type , data = ''):
     if type == 'Accept':
         conn.send(messages.createMessage('Accept'))
     if type == 'Reject':
-        conn.send(bytes[messages.createMessage('Reject', data)])
+        conn.send(messages.createMessage('Reject', data))
     if type == 'Status':
-        conn.send(bytes[messages.createMessage('Status')])
+        conn.send(messages.createMessage('Status'))
     if type == 'Start':
-        conn.send(bytes[messages.createMessage('Start')])
+        conn.send(messages.createMessage('Start'))
     print('message of type {0} sent'.format(type))
 
 sock = socket.socket()
