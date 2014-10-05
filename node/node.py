@@ -28,6 +28,7 @@ class node:
        self.status = 'disconnected'
        self.codePath = ''
        self.result = ''
+       self.run()
 
 
     def run(self):
@@ -42,7 +43,7 @@ class node:
                 self.status = 'idle'
                 print(msg['reason'])
             if msg['type'] == 'Status':
-                self.connection.sendMessage('Status', statusenum[self.status])
+                self.connection.sendMessage('Status', self.status)
             if msg['type'] == 'Task':
                 if self.status == 'idle':
                     self.parametrs = msg['parametrs']

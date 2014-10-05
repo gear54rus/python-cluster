@@ -18,7 +18,16 @@ print("Waiting for connect. Please, run client")
 sock.listen(1)
 conn, addr = sock.accept()
 
-print('Connected to ' + addr.__str__())
+
+
+
+print('Connected to ' + addr.__str__() + '\n Waiting for answer')
+
+data = conn.recv(1024)
+if not data:
+    print('Can not receive data from client, try again.')
+else:
+    print('Data received from client:'+data.decode('UTF-8') + '\nContinue...')
 
 while True:
     command = input('Enter command:')
@@ -56,6 +65,12 @@ while True:
         continue
     if command == 'Status':
         sendMessage('Status')
+        data = conn.recv(1024)
+        if not data:
+            print('Can not receive data from client, try again.')
+            continue
+        else:
+            print('Data received from client:'+data.decode('UTF-8') + '\nContinue...')
         continue
     if command == 'Task':
         with open('algTestRead.py', 'r') as content_file:
