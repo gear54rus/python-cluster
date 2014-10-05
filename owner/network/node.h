@@ -18,13 +18,12 @@ public:
         Accept = 0x1,
         Reject = 0x2,
         Join = 0x3,
-        Leave = 0x4,
-        Status = 0x5,
-        Job = 0x6,
-        Start = 0x7,
-        Stop = 0x8,
-        Finished = 0x9,
-        Disconnect = 0xA
+        Status = 0x4,
+        Job = 0x5,
+        Start = 0x6,
+        Stop = 0x7,
+        Finished = 0x8,
+        Disconnect = 0x9
     };
     enum NodeStatus {
         Connecting = 0,

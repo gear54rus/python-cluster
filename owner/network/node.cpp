@@ -1,4 +1,4 @@
-#include <QtEndian>
+#include <QTimer>
 
 #include "node.h"
 
@@ -55,16 +55,18 @@ void Node::readyRead()
             message.length = l;
             buffer.clear();
             if(available > forHeader)
-                readyRead();
+                QTimer::singleShot(0, this, SLOT(readyRead()));
         } else
             buffer.append(socket->readAll());
     } else {
         quint8 forMessage = message.length - buffer.length();
-        if(available >= message.length) {
+        if(available >= forMessage) {
             buffer.append(socket->read(forMessage));
             message.body = buffer;
             buffer.clear();
             processMessage();
+            if(available > forMessage)
+                QTimer::singleShot(0, this, SLOT(readyRead()));
         } else
             buffer.append(socket->readAll());
     }
@@ -79,5 +81,19 @@ void Node::Message::reset()
 
 void Node::processMessage()
 {
+    switch(status) {
+        case Connecting: {
+            break;
+        }
+        case Idle: {
+            break;
+        }
+        case ReadyToStart: {
+            break;
+        }
+        case Working: {
+            break;
+        }
+    }
     message.reset();
 }
