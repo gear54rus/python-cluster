@@ -63,9 +63,9 @@ class node:
                     self.status = 'working'
                     self.connection.sendMessage('Accept',datetime.datetime.now())
                     self.result = self.worker.run(self.codePath)
-                    self.connection.sendMessage('Finished' ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S").encode() + ','.encode() + self.result)
+                    self.connection.sendMessage('Finished', datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S").encode() + ','.encode() + self.result)
                 else:
-                    self.connection.sendMessage('Reject','Node dont ready to start. Node status: ' + status)
+                    self.connection.sendMessage('Reject','Node is not ready to start. Node status: ' + self.status)
             if msg['type'] == 'Disconnect':
                 self.status = 'disconnected'
                 print('Server disconnected. Reason: ' + msg['reason'])
