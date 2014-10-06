@@ -47,7 +47,7 @@ class node:
                 self.status = 'idle'
                 print(msg['reason'])
             if msg['type'] == 'Status':
-                self.connection.sendMessage('Status', statusenum[ self.status ] )
+                self.connection.sendMessage('Status', statusenum[self.status] )
             if msg['type'] == 'Task':
                 print('NODE: got message: {0}'.format(msg['type']))
                 if self.status == 'idle':
@@ -102,7 +102,7 @@ class node:
         file = open(algName, "wb")
         file.write(code)
         file.close()
-        file = open("import", "wb")
+        file = open("input", "wb")
         file.write(parametrs)
         file.close()
         os.chdir(curDir)
