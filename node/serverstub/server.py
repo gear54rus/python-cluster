@@ -7,9 +7,9 @@ def sendMessage(type , data = ''):
     if type == 'Reject':
         conn.send(messages.createMessage('Reject', data))
     if type == 'Status':
-        conn.send(messages.createMessage('Status'))
+        conn.send(bytes ( [ messages.messageTypes['Status'] ] ) )
     if type == 'Start':
-        conn.send(messages.createMessage('Start'))
+        conn.send(bytes ( [ messages.messageTypes['Start'] ] ) )
     print('message of type {0} sent'.format(type))
 
 sock = socket.socket()

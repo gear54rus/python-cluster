@@ -18,10 +18,14 @@ class connection:
     def readLenData(self):
         """ returns data only """
         length = messages.BEByteStrToInt(self.readSocket(4))
-        data = sock.recv(length)
+        data = self.sock.recv(length)
         return data
     def checkSocket(self):
-        buff = self.sock.recv(1)
+        try:
+            buff = self.sock.recv(1)
+        except:
+            print ("Unexpected error: {0}".format( sys.exc_info()[0] ) )
+            return { 'type': 'Disconnect', 'reason': 'coz of error'}
         if not buff: # empty socket
             return buff
         # messages with only type are not processing later
@@ -41,7 +45,7 @@ class connection:
         print('CONNECTION: got message, Type = {} '.format(result['type']))
         return result
 
-    def sendMessage(self, type, msg):
+    def sendMessage(self, type, msg = ''):
         data = messages.createMessage(type, msg)
         if not data:
             print('CONNECTION: message was not sent, Type = {}'.format(type))

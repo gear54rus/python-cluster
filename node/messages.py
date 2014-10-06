@@ -4,26 +4,24 @@ messageTypes = {
 'Accept' : 0x1,
 'Reject' : 0x2,
 'Join' : 0x3,
-'Leave' : 0x4,
-'Status' : 0x5,
-'Task' : 0x6,
-'Start' : 0x7,
-'Stop' : 0x8,
-'Finished' : 0x9,
-'Disconnect' : 0xA,
+'Status' : 0x4,
+'Task' : 0x5,
+'Start' : 0x6,
+'Stop' : 0x7,
+'Finished' : 0x8,
+'Disconnect' : 0x9,
 
 #reverse
 
 0x1 : 'Accept',
 0x2 : 'Reject',
 0x3 : 'Join',
-0x4 : 'Leave',
-0x5 : 'Status',
-0x6 : 'Task',
-0x7 : 'Start',
-0x8 : 'Stop',
-0x9 : 'Finished',
-0xA : 'Disconnect'
+0x4 : 'Status',
+0x5 : 'Task',
+0x6 : 'Start',
+0x7 : 'Stop',
+0x8 : 'Finished',
+0x9 : 'Disconnect'
 }
 
 def intToBEByteStr(number):
@@ -40,12 +38,10 @@ def createMessage(messTypeName, messData = ''):
         result = bytes([messageTypes[messTypeName]])
     if messTypeName == 'Reject':
         result = bytes([messageTypes[messTypeName]]) + intToBEByteStr(len(messData)) + messData.encode('utf-8')
-    if messTypeName == 'Leave':
-        result = bytes([messageTypes[messTypeName]])
     if messTypeName == 'Status':
-        result = bytes([messageTypes[messTypeName]] )+ bytes(messData)
+        result = bytes([messageTypes[messTypeName]] )+ bytes( [messData] )
     if messTypeName == 'Finished':
-        result = bytes([messageTypes[messTypeName]]) + intToBEByteStr(len(messData)) + messData.encode('utf-8')
+        result = bytes([messageTypes[messTypeName]]) + intToBEByteStr(len(messData)) + messData
     if messTypeName == 'Disconnect':
         result = bytes([messageTypes[messTypeName]]) + intToBEByteStr(len(messData)) + messData.encode('utf-8')
     return result

@@ -8,6 +8,8 @@ class worker:
         algName = 'alg.py'
         os.chdir(pathToAlgDir)
         exec(open(algName).read())
+        with open('log', 'rb') as content_file:
+            log = content_file.read()
         os.chdir(curDir)
-        return True
+        return log
 
