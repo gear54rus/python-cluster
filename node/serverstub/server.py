@@ -70,7 +70,7 @@ while True:
             print('Can not receive data from client, try again.')
             continue
         else:
-            print('Data received from client:'+data.decode('UTF-8') + '\nContinue...')
+            print('Data received from client:' + data.__str__() + '\nContinue...')
         continue
     if command == 'Task':
         with open('algTestRead.py', 'r') as content_file:

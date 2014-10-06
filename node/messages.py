@@ -43,7 +43,7 @@ def createMessage(messTypeName, messData = ''):
     if messTypeName == 'Leave':
         result = bytes([messageTypes[messTypeName]])
     if messTypeName == 'Status':
-        result = bytes([messageTypes[messTypeName]]) + messData.encode('utf-8')
+        result = bytes([messageTypes[messTypeName]] )+ bytes(messData)
     if messTypeName == 'Finished':
         result = bytes([messageTypes[messTypeName]]) + intToBEByteStr(len(messData)) + messData.encode('utf-8')
     if messTypeName == 'Disconnect':

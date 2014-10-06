@@ -43,7 +43,7 @@ class node:
                 self.status = 'idle'
                 print(msg['reason'])
             if msg['type'] == 'Status':
-                self.connection.sendMessage('Status', self.status)
+                self.connection.sendMessage('Status', statusenum[self.status])
             if msg['type'] == 'Task':
                 if self.status == 'idle':
                     self.parametrs = msg['parametrs']
