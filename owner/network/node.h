@@ -34,6 +34,7 @@ public:
 
     explicit Node(QTcpSocket* socket);
     void addTask(Task* task);
+    void kick();
     ~Node();
 signals:
     void taskFinished(Task* task);
@@ -54,6 +55,12 @@ private:
     QByteArray buffer;
     QTcpSocket* socket;
     struct Message {
+        enum MessagePart {
+            Type = 0,
+            Length,
+            Body
+        };
+        MessagePart toParse;
         MessageType type;
         quint32 length;
         QByteArray body;

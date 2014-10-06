@@ -8,16 +8,30 @@ Node::Node(QTcpSocket* socket) :
     status = Connecting;
     this->socket = socket;
     message.reset();
-    QObject::connect(this->socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
+    QObject::connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
 }
 
 void Node::addTask(Task* task)
 {
     switch(task->getType()) {
+        case Task::GetStatus: {
+            break;
+        }
         case Task::Assign: {
+            break;
+        }
+        case Task::Start: {
+            break;
+        }
+        case Task::Stop: {
+            break;
         }
     }
     tasks.enqueue(task);
+}
+
+void Node::kick()
+{
 }
 
 Node::~Node()
@@ -31,49 +45,84 @@ Node::~Node()
 void Node::readyRead()
 {
     quint64 available = socket->bytesAvailable();
-    if(message.type == None) {
-        quint8 forHeader = 5 - buffer.length();
-        if(available >= forHeader) {
-            buffer.append(socket->read(forHeader));
-            QDataStream stream(buffer);
-            quint8 t;
-            quint32 l;
-            stream >> t;
-            stream >> l;
-            try {
+    if(!available)
+        return;
+    try {
+        switch(message.toParse) {
+            case Message::MessagePart::Type: {
+                quint8 t;
+                QDataStream(buffer) >> t;
                 if((t <= static_cast<quint8>(None)) || (t > static_cast<quint8>(Disconnect)))
                     throw "Unknown message type";
-                if((l > MAX_MESSAGE_LENGTH) || (l == 0))
-                    throw "Invalid message length";
-            } catch(QString reason) {
-                emit malformedMessage(reason);
-                socket->readAll();
-                message.reset();
-                return;
+                message.type = static_cast<MessageType>(t);
+                switch(message.type) {
+                    case Accept: {
+                        processMessage();
+                        if(socket->bytesAvailable())
+                            QTimer::singleShot(0, this, SLOT(readyRead));
+                        break;
+                    }
+                    default: {
+                        if(socket->bytesAvailable())
+                            readyRead();
+                    }
+                }
+                break;
             }
-            message.type = static_cast<MessageType>(t);
-            message.length = l;
-            buffer.clear();
-            if(available > forHeader)
-                QTimer::singleShot(0, this, SLOT(readyRead()));
-        } else
-            buffer.append(socket->readAll());
-    } else {
-        quint8 forMessage = message.length - buffer.length();
-        if(available >= forMessage) {
-            buffer.append(socket->read(forMessage));
-            message.body = buffer;
-            buffer.clear();
-            processMessage();
-            if(available > forMessage)
-                QTimer::singleShot(0, this, SLOT(readyRead()));
-        } else
-            buffer.append(socket->readAll());
+            case Message::MessagePart::Length: {
+                QDataStream stream(buffer);
+                switch(message.type) {
+                    case Status: {
+                        quint8 s;
+                        stream >> s;
+                        if((s <= static_cast<quint8>(Idle)) || (s > static_cast<quint8>(Working)))
+                            throw "Unknown node status";
+                        message.body.append(s);
+                        processMessage();
+                        if(socket->bytesAvailable())
+                            QTimer::singleShot(0, this, SLOT(readyRead));
+                        break;
+                    }
+                    default: {
+                        quint8 forLength = 4 - buffer.length();
+                        if(available >= forLength) {
+                            quint32 l;
+                            stream >> l;
+                            if((l > MAX_MESSAGE_LENGTH) || (l == 0))
+                                throw "Invalid message length";
+                            message.length = l;
+                            if(socket->bytesAvailable())
+                                readyRead();
+                        } else
+                            buffer.append(socket->readAll());
+                    }
+                }
+                break;
+            }
+            case Message::MessagePart::Body: {
+                quint8 forBody = message.length - buffer.length();
+                if(available >= forBody) {
+                    message.body.append(socket->read(forBody));
+                    processMessage();
+                    if(socket->bytesAvailable())
+                        QTimer::singleShot(0, this, SLOT(readyRead));
+                } else
+                    buffer.append(socket->readAll());
+                break;
+            }
+        }
+    } catch(QString reason) {
+        emit malformedMessage(reason);
+        socket->readAll();
+        message.reset();
+        buffer.clear();
+        return;
     }
 }
 
 void Node::Message::reset()
 {
+    toParse = Type;
     type = None;
     length = 0;
     body.clear();
@@ -96,4 +145,5 @@ void Node::processMessage()
         }
     }
     message.reset();
+    buffer.clear();
 }
