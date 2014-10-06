@@ -53,10 +53,9 @@ public:
 
 class AssignTask : public Task {
 public:
-    AssignTask(quint8 nodeID, const QByteArray& input, const QString& code);
+    AssignTask(quint8 nodeID, const QByteArray& input, const QByteArray& code);
     quint8 nodeID;
-    QByteArray input;
-    QString code;
+    QByteArray input, code;
 };
 
 class StartTask : public Task {
@@ -73,6 +72,11 @@ public:
 class KickTask : public StartTask {
 public:
     KickTask(quint8 nodeID);
+};
+
+class GetStatusTask : public StartTask {
+public:
+    GetStatusTask(quint8 nodeID);
 };
 
 #endif // TASK_H

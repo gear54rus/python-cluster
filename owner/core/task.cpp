@@ -28,7 +28,7 @@ ListenTask::ListenTask(const QHostAddress& address, quint16 port)
     type = Listen;
 }
 
-AssignTask::AssignTask(quint8 nodeID, const QByteArray& input, const QString& code)
+AssignTask::AssignTask(quint8 nodeID, const QByteArray& input, const QByteArray& code)
 {
     this->nodeID = nodeID;
     this->input = input;
@@ -52,4 +52,10 @@ KickTask::KickTask(quint8 nodeID) :
     StartTask(nodeID)
 {
     type = Kick;
+}
+
+GetStatusTask::GetStatusTask(quint8 nodeID) :
+    StartTask(nodeID)
+{
+    type = GetStatus;
 }

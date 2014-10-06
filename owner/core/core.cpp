@@ -44,13 +44,13 @@ void Core::newTask(Task* task)
 void Core::newNode()
 {
     Node* node = new Node(server.nextPendingConnection());
-    QObject::connect(node, SIGNAL(taskFinished(Task*)), this, SLOT(nodeTaskFinished(Task*)));
-    QObject::connect(node, SIGNAL(malformedMessage(QString)), this, SLOT(nodeMalformedMessage(QString)));
-    QObject::connect(node, SIGNAL(unexpectedMessage(QString)), this, SLOT(nodeUnexpectedMessage(QString)));
-    QObject::connect(node, SIGNAL(joinError(QString)), this, SLOT(nodeJoinError(QString)));
-    QObject::connect(node, SIGNAL(joined()), this, SLOT(nodeJoined()));
-    QObject::connect(node, SIGNAL(left()), this, SLOT(nodeLeft()));
-    QObject::connect(node, SIGNAL(statusChanged()), this, SLOT(nodeStatusChanged()));
+    QObject::connect(node, SIGNAL(taskFinished(Task*)), this, SLOT(nodeTaskFinished(Task*)), Qt::QueuedConnection);
+    QObject::connect(node, SIGNAL(malformedMessage(QString)), this, SLOT(nodeMalformedMessage(QString)), Qt::QueuedConnection);
+    QObject::connect(node, SIGNAL(unexpectedMessage(QString)), this, SLOT(nodeUnexpectedMessage(QString)), Qt::QueuedConnection);
+    QObject::connect(node, SIGNAL(joinError(QString)), this, SLOT(nodeJoinError(QString)), Qt::QueuedConnection);
+    QObject::connect(node, SIGNAL(joined()), this, SLOT(nodeJoined()), Qt::QueuedConnection);
+    QObject::connect(node, SIGNAL(left()), this, SLOT(nodeLeft()), Qt::QueuedConnection);
+    QObject::connect(node, SIGNAL(statusChanged()), this, SLOT(nodeStatusChanged()), Qt::QueuedConnection);
     nodes.append(node);
 }
 

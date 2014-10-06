@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QQueue>
+#include <QStringList>
 #include <QTcpSocket>
 #include <QDataStream>
 #include <QByteArray>
@@ -66,8 +67,11 @@ private:
         QByteArray body;
         void reset();
     };
+    QString version;
+    QStringList modules;
     Message message;
-    void processMessage();
+    int taskIndex(Task* task);
+    bool processMessage();
 };
 
 #endif // NODE_H
