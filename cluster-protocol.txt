@@ -19,7 +19,7 @@ Join[1]:length[4]:'version(major.minor.micro);modules'      ==>
 Status[1]:status value[1]           	 ==>
 
 ====================== IF IDLE ============================================= 
-									     <== Job[1]:length[4]:lengthOfParameters[4]:parameters:lengthOfCode[4]:'code'             
+									     <== Job[1]:lengthOfParameters[4]:parameters:lengthOfCode[4]:'code'             
 Accept[1] | Reject[1]:length[4]:'reason' ==>                                  Node status: ready to start
 
 ====================== IF ACCEPT ============================================
