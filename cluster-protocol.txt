@@ -25,6 +25,9 @@ Accept[1] | Reject[1]:length[4]:'reason' ==>                                  No
 ====================== IF ACCEPT ============================================
 										 <== Start[1]
 Accept[1]:length[4]:now | Reject[1]:length[4]:'reason' ==>                    Node status: working
+====================== IF NEED TO STOP ======================================
+										 <== Stop[1]
+Accept[1] | Reject[1]:length[4]:'reason' ==> 									Node status: idle
 			........................................
 Finished[1]:length[4]:now,'result'           ==>
                                          <== Accept[1]
