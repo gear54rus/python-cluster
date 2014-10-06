@@ -24,6 +24,7 @@ class connection:
         try:
             buff = self.sock.recv(1)
         except:
+            #if we can get data from socket then tell to node disconnect
             print ("Unexpected error: {0}".format( sys.exc_info()[0] ) )
             return { 'type': 'Disconnect', 'reason': 'coz of error'}
         if not buff: # empty socket

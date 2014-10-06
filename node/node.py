@@ -38,7 +38,9 @@ class node:
             msg = self.connection.checkSocket()
             if not msg:
                 continue
-            print('NODE: got message: {0}'.format(msg))
+            if msg['type'] != 'Task':
+                #imaged that 256MB printed in stdout 
+                print('NODE: got message: {0}'.format(msg))
             if msg['type'] == 'Accept':
                 self.status = 'idle'
             if msg['type'] == 'Reject':
@@ -47,6 +49,7 @@ class node:
             if msg['type'] == 'Status':
                 self.connection.sendMessage('Status', statusenum[ self.status ] )
             if msg['type'] == 'Task':
+                print('NODE: got message: {0}'.format(msg['type']))
                 if self.status == 'idle':
                     self.parametrs = msg['parametrs']
                     self.code = msg['code']
