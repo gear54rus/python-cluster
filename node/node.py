@@ -47,7 +47,7 @@ class node:
                 self.status = 'idle'
                 print(msg['reason'])
             if msg['type'] == 'Status':
-                self.connection.sendMessage('Status', statusenum[self.status] )
+                self.connection.sendMessage('Status', statusenum[ self.status ] )
             if msg['type'] == 'Task':
                 print('NODE: got message: {0}'.format(msg['type']))
                 if self.status == 'idle':
@@ -63,7 +63,7 @@ class node:
                     self.status = 'working'
                     self.connection.sendMessage('Accept',datetime.datetime.now())
                     self.result = self.worker.run(self.codePath)
-                    self.connection.sendMessage('Finished', datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S").encode() + ','.encode() + self.result)
+                    self.connection.sendMessage('Finished' ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S").encode() + ','.encode() + self.result)
                 else:
                     self.connection.sendMessage('Reject','Node is not ready to start. Node status: ' + self.status)
             if msg['type'] == 'Disconnect':

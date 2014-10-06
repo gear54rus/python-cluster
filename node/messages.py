@@ -70,5 +70,5 @@ def readMessage(msg):
         parlength, pardata = GetMsgLenData(msg)
         msg = msg[parlength:]
         codelength, codedata = GetMsgLenData(msg)
-        result.update({'parametrs': pardata, 'code': codedata})
+        result.update ({'parametrs' : pardata, 'code' : codedata })
     return result
