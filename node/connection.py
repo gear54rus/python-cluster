@@ -8,9 +8,7 @@ class connection:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect( ip, port )
     def connect(self, ip, port):
-        self.conn = self.sock.connect( ('127.0.0.1', 9090) )
-
-        #cur_version = '{0}.{1}.{2}'.format(sys.version_info[0],sys.version_info[1],sys.version_info[2])
+        self.conn = self.sock.connect( (ip, port) )
 
     def readSocket(self, count):
         buff = self.sock.recv(count)

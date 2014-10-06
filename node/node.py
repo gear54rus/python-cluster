@@ -23,7 +23,7 @@ class node:
 
     def __init__(self,ip,port):
        self.connection = connection.connection(ip, port)
-       cur_version = '{0}.{1}.{2}'.format(sys.version_info[0],sys.version_info[1],sys.version_info[2])
+       cur_version = '{0}.{1}.{2};'.format(sys.version_info[0],sys.version_info[1],sys.version_info[2])
        self.connection.sendMessage('Join', cur_version)
        self.status = 'disconnected'
        self.codePath = ''
