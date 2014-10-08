@@ -1,3 +1,7 @@
+import sys
+sys.stdout = open('log', 'w')
+sys.stderr = sys.stdout
+
 class fibonachiNumbers:
 	def __init__(self, number):
 		self.a = 0
@@ -11,9 +15,6 @@ class fibonachiNumbers:
 	def get(self):
 		return self.b
 
-
-import sys
-sys.stdout = open('log', 'w')
 
 import time
 

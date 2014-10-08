@@ -3,6 +3,8 @@ import sys
 
 
 sys.stdout = open('log', 'w')
+sys.stderr = sys.stdout
+
 f = open('input', 'rb')
 number = f.read(1)
 number = int(number)
