@@ -5,6 +5,7 @@ import sys
 import datetime
 import os
 import random
+import time
 
 statusenum = {
 0x1: 'idle',
@@ -19,6 +20,11 @@ statusenum = {
 }
 
 
+def longintToBEByteStr(number):
+    return struct.pack('>Q', number)
+
+
+
 class node:
 
     def __init__(self,ip,port):
@@ -30,8 +36,11 @@ class node:
        self.result = ''
        self.worker = worker.worker()
        self.run()
-
-
+    def getTimeUnix64(self):
+        timestamp = datetime.datetime.now()
+        timestamp = time.mktime(timestamp.timetuple())*1e3 + timestamp.microsecond/1e3
+        timestamp = int (timest * 1000)
+        return timestamp
     def run(self):
         var = 'true'
         while var:
@@ -61,9 +70,9 @@ class node:
             if msg['type'] == 'Start':
                 if self.status == 'ready to start':
                     self.status = 'working'
-                    self.connection.sendMessage('Accept',datetime.datetime.now())
+                    self.connection.sendMessage('Accept', self.getTimeUnix64())
                     self.result = self.worker.run(self.codePath)
-                    self.connection.sendMessage('Finished' ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S").encode() + ','.encode() + self.result)
+                    self.connection.sendMessage('Finished', longintToBEByteStr(self.getTimeUnix64()) + ','.encode() + self.result)
                 else:
                     self.connection.sendMessage('Reject','Node is not ready to start. Node status: ' + self.status)
             if msg['type'] == 'Disconnect':

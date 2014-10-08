@@ -27,6 +27,9 @@ messageTypes = {
 def intToBEByteStr(number):
     return struct.pack('>I', number)
 
+def longintToBEByteStr(number):
+    return struct.pack('>Q', number)
+
 def BEByteStrToInt(str):
     return struct.unpack('>I', str)[0]
 
@@ -35,7 +38,8 @@ def createMessage(messTypeName, messData = ''):
     if messTypeName == 'Join':
         result = bytes([messageTypes[messTypeName]]) + intToBEByteStr(len(messData)) + messData.encode('utf-8')
     if messTypeName == 'Accept':
-        result = bytes([messageTypes[messTypeName]])
+        #accept message data is 64bit unix time
+        result = bytes([messageTypes[messTypeName]]) + longintToBEByteStr(messData)
     if messTypeName == 'Reject':
         result = bytes([messageTypes[messTypeName]]) + intToBEByteStr(len(messData)) + messData.encode('utf-8')
     if messTypeName == 'Status':
