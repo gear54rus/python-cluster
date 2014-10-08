@@ -32,7 +32,7 @@ class connection:
         result = { 'type' : messages.messageTypes[self.byteToInt(buff)]}
         if  result['type'] == 'Reject':
             reason = self.readLenData()
-            result.update( {'reason': msgdata} )
+            result.update( {'reason': reason} )
         if result['type'] == 'Task':
             parametrs = self.readLenData()
             result.update( {'parametrs': parametrs} )
