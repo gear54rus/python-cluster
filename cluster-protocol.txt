@@ -13,7 +13,7 @@ Status values: 0x1 (idle) 0x2 (ready to start) 0x3 (working)
 
 Node ================================================================== Owner   
 Join[1]:length[4]:'version(major.minor.micro);modules'      ==>
-										 <== Accept[1] | Reject[1]:length[4]:'reason' Node status: idle
+										 <== Accept[1]:length[4]:'name of node' | Reject[1]:length[4]:'reason' Node status: idle
 				........................................
 										 <== Status[1]
 Status[1]:status value[1]           	 ==>
@@ -40,3 +40,4 @@ Disconnect[1]:length[4]:'reason'
 Node sends packet as on line 19 when its status changes.
 Semicolons are there to denote boundaries, they are never transmitted over the wire.
 While technically, message length can be up to 4GB, maximum valid message length is limited to 256MB for convenience of buffer allocation.
+All transfering time must be presentated in unix64 
