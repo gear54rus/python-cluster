@@ -3,7 +3,7 @@
 
 #include <QObject>
 #include <QMutex>
-#include <QList>
+#include <QMap>
 #include <QString>
 #include <QStringList>
 #include <QTcpSocket>
@@ -18,6 +18,10 @@ class Core : public QObject {
 public:
     explicit Core();
     void setNameList(QStringList* list);
+    inline const QMap<quint32, Node*>* getNodeMap() {
+        return &nodes;
+    }
+
 signals:
     void taskFinished(Task* task);
     void newEvent(Event*);
@@ -39,7 +43,8 @@ private:
     QMutex m;
     QStringList* nameList;
     QTcpServer server;
-    QList<Node*> nodes;
+    quint32 nextNodeId;
+    QMap<quint32, Node*> nodes;
     void listen(ListenTask* task);
 };
 

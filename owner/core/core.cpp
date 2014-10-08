@@ -6,7 +6,8 @@
 Core::Core() :
     QObject(nullptr),
     nameList(nullptr),
-    server(this)
+    server(this),
+    nextNodeId(1)
 {
     QObject::moveToThread(new QThread(nullptr));
     thread()->start();
@@ -43,7 +44,9 @@ void Core::newTask(Task* task)
 
 void Core::newNode()
 {
-    Node* node = new Node(server.nextPendingConnection());
+    QString name = nameList->takeFirst();
+    nameList->append(name);
+    Node* node = new Node(server.nextPendingConnection(), name);
     QObject::connect(node, SIGNAL(taskFinished(Task*)), this, SLOT(nodeTaskFinished(Task*)), Qt::QueuedConnection);
     QObject::connect(node, SIGNAL(malformedMessage(QString)), this, SLOT(nodeMalformedMessage(QString)), Qt::QueuedConnection);
     QObject::connect(node, SIGNAL(unexpectedMessage(QString)), this, SLOT(nodeUnexpectedMessage(QString)), Qt::QueuedConnection);
@@ -51,7 +54,7 @@ void Core::newNode()
     QObject::connect(node, SIGNAL(joined()), this, SLOT(nodeJoined()), Qt::QueuedConnection);
     QObject::connect(node, SIGNAL(left()), this, SLOT(nodeLeft()), Qt::QueuedConnection);
     QObject::connect(node, SIGNAL(statusChanged()), this, SLOT(nodeStatusChanged()), Qt::QueuedConnection);
-    nodes.append(node);
+    nodes.insert(nextNodeId++, node);
 }
 
 void Core::nodeTaskFinished(Task*)
@@ -68,10 +71,17 @@ void Core::nodeUnexpectedMessage(QString reason)
 
 void Core::nodeJoinError(QString reason)
 {
+    Node* node = static_cast<Node*>(QObject::sender());
+    quint32 i = nodes.key(node, 0);
+    if(i)
+        nodes.remove(i);
+    emit newEvent(new JoinErrorEvent(node->getAddress(), reason));
+    node->deleteLater();
 }
 
 void Core::nodeJoined()
 {
+    emit newEvent(new NodeJoinedEvent(nodes.key(static_cast<Node*>(QObject::sender()), 0)));
 }
 void Core::nodeLeft()
 {

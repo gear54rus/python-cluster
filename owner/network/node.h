@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QQueue>
+#include <QString>
 #include <QStringList>
 #include <QTcpSocket>
 #include <QDataStream>
@@ -32,8 +33,19 @@ public:
         ReadyToStart,
         Working
     };
+    static QStringList typeText;
+    static QStringList statusText;
+    explicit Node(QTcpSocket* socket, QString name);
+    inline QString getName() const {
+        return name;
+    }
+    inline QString getAddress() const {
+        return socket->peerAddress().toString();
+    }
+    inline QString getStatus() const {
+        return statusText[status];
+    }
 
-    explicit Node(QTcpSocket* socket);
     void addTask(Task* task);
     void kick();
     ~Node();
@@ -52,6 +64,7 @@ private slots:
 
 private:
     NodeStatus status;
+    QString name;
     QQueue<Task*> tasks;
     QByteArray buffer;
     QTcpSocket* socket;

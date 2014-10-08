@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QString>
 #include <QStringList>
+#include <QMap>
 
 #include "listenwindow.h"
 #include "../core/core.h"
@@ -29,6 +30,8 @@ private slots:
     void newEvent(Event* event);
     void on_buttonListen_clicked();
 
+    void on_listNodes_currentRowChanged(int currentRow);
+
 private:
     enum LogType {
         Info = 0,
@@ -38,6 +41,7 @@ private:
     Ui::MainWindow* ui;
     ListenWindow* listenWindow;
     Core* core;
+    QMap<quint32, quint32> visualToCore;
     QStringList logTypes;
     void log(LogType type, const QString& message);
 };

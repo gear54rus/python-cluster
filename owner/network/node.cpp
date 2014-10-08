@@ -1,13 +1,19 @@
 #include <QTimer>
+#include <QChar>
 #include <QRegularExpression>
 #include <QRegularExpressionMatch>
 
 #include "node.h"
 
-Node::Node(QTcpSocket* socket) :
+QStringList Node::typeText(QStringList("None") << "Accept" << "Reject" << "Join" << "Status" << "Job" << "Start" << "Stop" << "Finish" << "Disconnect");
+QStringList Node::statusText(QStringList("Connecting") << "Idle" << "Ready to start" << "Working");
+
+Node::Node(QTcpSocket* socket, QString name) :
     QObject(nullptr)
 {
     status = Connecting;
+    name[0] = name[0].toUpper();
+    this->name = name;
     this->socket = socket;
     message.reset();
     QObject::connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
@@ -36,6 +42,8 @@ void Node::addTask(Task* task)
             stream << static_cast<quint8>(Stop);
             break;
         }
+        default:
+            Q_UNREACHABLE();
     }
     socket->write(message);
     socket->flush();
@@ -158,10 +166,9 @@ void Node::Message::reset()
 
 int Node::taskIndex(Task* task)
 {
-    for(qint32 i; i < tasks.length(); i++) {
+    for(qint32 i; i < tasks.length(); i++)
         if(tasks[i]->getType() == task->getType())
             return i;
-    }
     return -1;
 }
 
@@ -180,13 +187,21 @@ bool Node::processMessage()
                 stream << static_cast<quint8>(Accept);
                 emit joined();
             } else {
-                QString reason("Invalid join message");
-                stream << static_cast<quint8>(Reject) << reason.toLatin1();
+                QByteArray reason("Invalid join message");
+                stream << static_cast<quint8>(Reject) << reason;
                 emit joinError(reason);
             }
             break;
         }
         case Idle: {
+            switch(this->message.type) {
+                case Status : {
+                }
+                default: {
+                    stream << static_cast<quint8>(Reject);
+                    emit unexpectedMessage("");
+                }
+            }
             break;
         }
         case ReadyToStart: {
@@ -196,11 +211,13 @@ bool Node::processMessage()
             break;
         }
     }
-    if(!processFurther)
-        QObject::disconnect();
     socket->write(message);
     socket->flush();
     this->message.reset();
     buffer.clear();
+    if(!processFurther) {
+        QObject::disconnect();
+        socket->close();
+    }
     return processFurther;
 }
