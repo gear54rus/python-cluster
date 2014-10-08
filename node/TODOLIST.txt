@@ -4,6 +4,11 @@
 1.c. every node run in own thread
 1.d. every node prints log in main stdout. message template: "%NameOfNode%:%Module%:%Message%"
 1.e. every node save and run tasks in own folder. Foldername = nodename
+priority: low
 
-2. refactor node and client around protocol. Нужно разграничить ответственность ноды и коннекшна относительно протокола. Сейчас это 50/50
 
+2. task folder must be deleted after processing
+priority: high
+
+3. refactor node and client around protocol. Нужно разграничить ответственность ноды и коннекшна относительно протокола. Сейчас это 50/50
+priority: low
