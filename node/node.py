@@ -34,6 +34,7 @@ class node:
        self.status = 'disconnected'
        self.codePath = ''
        self.result = ''
+       self.name = 'defaultNodeName'
        self.worker = worker.worker()
        self.run()
     def getTimeUnix64(self):
@@ -51,6 +52,15 @@ class node:
                 #imaged that 256MB printed in stdout 
                 print('NODE: got message: {0}'.format(msg))
             if msg['type'] == 'Accept':
+
+                try:
+                    self.name = msg['name']
+                    break
+                except:
+                    salt = random.randint(1,9999)
+                    self.name = 'commonNode' + salt.__str__()
+                    break
+
                 self.status = 'idle'
             if msg['type'] == 'Reject':
                 self.status = 'idle'
@@ -91,21 +101,8 @@ class node:
         parametrs = self.parametrs
         algName = 'alg.py'
         curDir = os.getcwd();
-        NumberOfAttempts = 0
-        maxNumberOfAttempts = 10
-        while True:
-            try:
-                salt = random.randint(1,9999)
-                taskFullName = 'task' + salt.__str__()
-                os.makedirs(taskFullName)
-                break
-            except OSError:
-                if NumberOfAttempts < maxNumberOfAttempts:
-                    print("Oops!  That was no valid number.  Try again...")
-                    NumberOfAttempts += 1
-                else:
-                    print("Too many attempts. Break")
-                    break
+        taskFullName = self.name + '.task'
+        os.makedirs(taskFullName)
         taskPath = curDir + '\\' + taskFullName
         os.chdir(taskPath)
         file = open(algName, "wb")
