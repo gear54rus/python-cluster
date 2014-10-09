@@ -7,6 +7,7 @@ class connection:
     def __init__(self, ip, port):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect( ip, port )
+        self.lastMessageSend = 'none'
     def connect(self, ip, port):
         self.conn = self.sock.connect( (ip, port) )
 
@@ -41,6 +42,9 @@ class connection:
         if result['type'] == 'Disconnect':
             reason = self.readLenData()
             result.update( {'reason': reason} )
+        if ((result['type'] == 'Accept') && (self.lastMessageSend == 'Join')):
+            name = self.readLenData()
+            result.update( {'name' : name})
         print('CONNECTION: got message, Type = {} '.format(result['type']))
         return result
 
@@ -51,6 +55,7 @@ class connection:
             return False
         self.sock.send(data)    
         print('CONNECTION: message sent, Type = {}'.format(type))
+        self.lastMessageSend = type
         return True 
     def byteToInt(self, byte):
         result = struct.unpack('B', byte)[0]

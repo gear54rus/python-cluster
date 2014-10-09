@@ -52,15 +52,8 @@ class node:
                 #imaged that 256MB printed in stdout 
                 print('NODE: got message: {0}'.format(msg))
             if msg['type'] == 'Accept':
-
-                try:
+                if 'name' in msg:
                     self.name = msg['name']
-                    break
-                except:
-                    salt = random.randint(1,9999)
-                    self.name = 'commonNode' + salt.__str__()
-                    break
-
                 self.status = 'idle'
             if msg['type'] == 'Reject':
                 self.status = 'idle'
@@ -96,22 +89,36 @@ class node:
         self.connection.sendMessage('Disconnect',reason)
         return 1
 
+
+
+    def getTaskFullName(self):
+        return self.name + '.task'
+
+    def createTaskFolder(self):
+        os.makedirs(self.getTaskFullName())
+        resurn self.getTaskPath()
+
+    def getTaskPath(self):
+        curDir = os.getcwd();
+        taskPath = curDir + '\\' + self.getTaskFullName()
+
+    def saveTaskFile(self, name, data):
+        curDir = os.getcwd();
+        os.chdir(self.getTaskPath())
+        file = open(name, "wb")
+        file.write(data)
+        file.close()
+        os.chdir(curDir)
+
     def createTask(self):
         code = self.code
         parametrs = self.parametrs
         algName = 'alg.py'
-        curDir = os.getcwd();
-        taskFullName = self.name + '.task'
-        os.makedirs(taskFullName)
-        taskPath = curDir + '\\' + taskFullName
-        os.chdir(taskPath)
-        file = open(algName, "wb")
-        file.write(code)
-        file.close()
-        file = open("input", "wb")
-        file.write(parametrs)
-        file.close()
-        os.chdir(curDir)
+
+        taskPath = self.createTaskFolder()
+        self.saveTaskFile('alg.py', self.code)
+        self.saveTaskFile('input', self.parametrs)
+
         return taskPath
 
 
