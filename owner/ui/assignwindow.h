@@ -19,6 +19,7 @@ public:
     quint32 id;
     QByteArray input;
     QByteArray code;
+    bool assign;
 public slots:
     int exec();
     void accept();
@@ -28,7 +29,6 @@ private slots:
 
 private:
     Ui::AssignWindow* ui;
-    QFile taskFile;
 };
 
 #endif // ASSIGNWINDOW_H
