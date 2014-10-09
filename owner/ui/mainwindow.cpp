@@ -116,7 +116,7 @@ void MainWindow::on_buttonListen_clicked()
 
 void MainWindow::log(LogType type, const QString& message)
 {
-    ui->editLog->append(QString("%1 [%2] %3").arg(QDateTime::currentDateTime().toString("dd-MM-yyyy hh:mm:ss.zzz"), logTypes[type], message));
+    ui->editLog->appendPlainText(QString("%1 [%2] %3").arg(QDateTime::currentDateTime().toString("dd-MM-yyyy hh:mm:ss.zzz"), logTypes[type], message));
 }
 
 void MainWindow::on_listNodes_currentRowChanged(int currentRow)
