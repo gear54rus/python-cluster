@@ -12,6 +12,6 @@ class worker:
         with open('log', 'rb') as content_file:
             log = content_file.read()
         os.chdir(curDir)
-        shutil.rmtree(pathToAlgDir, ignore_errors = True, onerror = None)
+        
         return log
 

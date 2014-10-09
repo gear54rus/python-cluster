@@ -6,6 +6,7 @@ import datetime
 import os
 import random
 import time
+import shutil
 
 statusenum = {
 0x1: 'idle',
@@ -76,6 +77,7 @@ class node:
                     self.connection.sendMessage('Accept', self.getTimeUnix64())
                     self.result = self.worker.run(self.codePath)
                     self.connection.sendMessage('Finished', longintToBEByteStr(self.getTimeUnix64()) + ','.encode() + self.result)
+                    self.deleteTaskFolder()
                 else:
                     self.connection.sendMessage('Reject','Node is not ready to start. Node status: ' + self.status)
             if msg['type'] == 'Disconnect':
@@ -120,5 +122,6 @@ class node:
         self.saveTaskFile('input', self.parametrs)
 
         return taskPath
-
+    def deleteTaskFolder(self):
+        shutil.rmtree(self.getTaskPath(), ignore_errors = True, onerror = None)
 
