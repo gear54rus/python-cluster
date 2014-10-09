@@ -52,13 +52,15 @@ void Core::newNode()
     QObject::connect(node, SIGNAL(unexpectedMessage(QString)), this, SLOT(nodeUnexpectedMessage(QString)), Qt::QueuedConnection);
     QObject::connect(node, SIGNAL(joinError(QString)), this, SLOT(nodeJoinError(QString)), Qt::QueuedConnection);
     QObject::connect(node, SIGNAL(joined()), this, SLOT(nodeJoined()), Qt::QueuedConnection);
-    QObject::connect(node, SIGNAL(left()), this, SLOT(nodeLeft()), Qt::QueuedConnection);
+    QObject::connect(node, SIGNAL(left(QString)), this, SLOT(nodeLeft(QString)), Qt::QueuedConnection);
     QObject::connect(node, SIGNAL(statusChanged()), this, SLOT(nodeStatusChanged()), Qt::QueuedConnection);
+    QObject::connect(node, SIGNAL(jobFinished(QByteArray)), this, SLOT(nodeJobFinished(QByteArray)), Qt::QueuedConnection);
     nodes.insert(nextNodeId++, node);
 }
 
-void Core::nodeTaskFinished(Task*)
+void Core::nodeTaskFinished(Task* task)
 {
+    delete task;
 }
 
 void Core::nodeMalformedMessage(QString reason)
@@ -83,11 +85,15 @@ void Core::nodeJoined()
 {
     emit newEvent(new NodeJoinedEvent(nodes.key(static_cast<Node*>(QObject::sender()), 0)));
 }
-void Core::nodeLeft()
+void Core::nodeLeft(QString reason)
 {
 }
 
 void Core::nodeStatusChanged()
+{
+}
+
+void Core::nodeJobFinished(QByteArray output)
 {
 }
 

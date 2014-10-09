@@ -2,6 +2,7 @@
 #include <QChar>
 #include <QRegularExpression>
 #include <QRegularExpressionMatch>
+#include <QDateTime>
 
 #include "node.h"
 
@@ -16,6 +17,7 @@ Node::Node(QTcpSocket* socket, QString name) :
     this->name = name.toLatin1();
     this->socket = socket;
     message.reset();
+    QObject::connect(socket, SIGNAL(disconnected()), this, SLOT(disconnected()));
     QObject::connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
 }
 
@@ -35,6 +37,7 @@ void Node::addTask(Task* task)
             break;
         }
         case Task::Start: {
+            jobStartedAtLocal = QDateTime::currentMSecsSinceEpoch();
             stream << static_cast<quint8>(Start);
             break;
         }
@@ -47,16 +50,14 @@ void Node::addTask(Task* task)
     }
     socket->write(message);
     socket->flush();
-    tasks.enqueue(task);
+    tasks.append(task);
 }
 
 void Node::kick()
 {
-    QString reason("Kicked by owner");
     QByteArray message;
-    message.append(static_cast<quint8>(Disconnect));
-    message.append(static_cast<quint32>(reason.length()));
-    message.append(reason);
+    QDataStream stream(message);
+    stream << static_cast<quint8>(Disconnect) << QByteArray("Kicked by owner");
     socket->write(message);
     socket->flush();
 }
@@ -156,6 +157,11 @@ void Node::readyRead()
     }
 }
 
+void Node::disconnected()
+{
+    emit left("Connection interrupted");
+}
+
 void Node::Message::reset()
 {
     toParse = Type;
@@ -164,51 +170,123 @@ void Node::Message::reset()
     body.clear();
 }
 
-int Node::taskIndex(Task* task)
+int Node::taskIndex(Task::Type type)
 {
     for(qint32 i; i < tasks.length(); i++)
-        if(tasks[i]->getType() == task->getType())
+        if(tasks[i]->getType() == type)
             return i;
     return -1;
 }
 
 bool Node::processMessage()
 {
+    if(this->message.type == Disconnect) {
+        emit left(this->message.body);
+        QObject::disconnect();
+        return false;
+    }
     QByteArray message;
     QDataStream stream(&message, QIODevice::WriteOnly);
     bool processFurther = true;
-    switch(status) {
-        case Connecting: {
-            QRegularExpressionMatch match = QRegularExpression("^(\\d+\\.\\d+\\.\\d+);((?:[a-z_][a-z0-9_]*,?)*)$").match(this->message.body);
-            if(match.hasMatch()) {
-                version = match.captured(1);
-                modules = match.captured(2).split(',', QString::SkipEmptyParts);
-                status = Idle;
-                stream << static_cast<quint8>(Accept) << name;
-                emit joined();
-            } else {
-                QByteArray reason("Invalid join message");
+    if(this->message.type == Status) {
+        int index = taskIndex(Task::GetStatus);
+        status = static_cast<NodeStatus>(this->message.body.at(0));
+        if(index == -1) {
+            stream << static_cast<quint8>(Accept);
+            emit statusChanged();
+        } else {
+            tasks.removeAt(index);
+            emit taskFinished(tasks[index]);
+        }
+    } else {
+        try {
+            switch(status) {
+                case Connecting: {
+                    QRegularExpressionMatch match = QRegularExpression("^(\\d+\\.\\d+\\.\\d+);((?:[a-z_][a-z0-9_]*,?)*)$").match(this->message.body);
+                    if(match.hasMatch()) {
+                        version = match.captured(1);
+                        modules = match.captured(2).split(',', QString::SkipEmptyParts);
+                        status = Idle;
+                        stream << static_cast<quint8>(Accept) << name;
+                        emit joined();
+                    } else {
+                        QByteArray reason("Invalid join message");
+                        stream << static_cast<quint8>(Reject) << reason;
+                        emit joinError(reason);
+                        throw 0;
+                    }
+                    break;
+                }
+                case Idle: {
+                    switch(this->message.type) {
+                        case Accept:
+                        case Reject: {
+                            int index = taskIndex(Task::Assign);
+                            if(index == -1)
+                                throw 1;
+                            else {
+                                Task* t = tasks.takeAt(index);
+                                if(this->message.type == Accept) {
+                                    t->finish(0);
+                                    status = ReadyToStart;
+                                } else
+                                    t->finish(1, this->message.body);
+                                emit taskFinished(t);
+                            }
+                            break;
+                        }
+                        default: {
+                            throw 1;
+                        }
+                    }
+                    break;
+                }
+                case ReadyToStart: {
+                    switch(this->message.type) {
+                        case Accept:
+                        case Reject: {
+                            int index = taskIndex(Task::Start);
+                            if(index == -1)
+                                throw 1;
+                            else {
+                                Task* t = tasks.takeAt(index);
+                                if(this->message.type == Accept) {
+                                    t->finish(0);
+                                    status = Working;
+                                } else
+                                    t->finish(1, this->message.body);
+                                emit taskFinished(t);
+                            }
+                            break;
+                        }
+                        default: {
+                            throw 1;
+                        }
+                    }
+                    break;
+                }
+                case Working: {
+                    switch(this->message.type) {
+                        case Finished: {
+                            jobFinishedAtLocal = QDateTime::currentMSecsSinceEpoch();
+                            stream << static_cast<quint8>(Accept);
+                            emit jobFinished(this->message.body);
+                            break;
+                        }
+                        default: {
+                            throw 1;
+                        }
+                    }
+                    break;
+                }
+            }
+        } catch(quint8 code) {
+            if(code) {
+                QByteArray reason(QString("Node sent \'%1\' while \'%2\'.").arg(typeText[this->message.type], statusText[status]).toLatin1());
                 stream << static_cast<quint8>(Reject) << reason;
-                emit joinError(reason);
-            }
-            break;
-        }
-        case Idle: {
-            switch(this->message.type) {
-                case Status : {
-                }
-                default: {
-                    stream << static_cast<quint8>(Reject);
-                    emit unexpectedMessage("");
-                }
-            }
-            break;
-        }
-        case ReadyToStart: {
-            break;
-        }
-        case Working: {
-            break;
+                emit unexpectedMessage(reason);
+            } else
+                processFurther = false;
         }
     }
     socket->write(message);

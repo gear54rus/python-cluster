@@ -2,7 +2,7 @@
 #define NODE_H
 
 #include <QObject>
-#include <QQueue>
+#include <QList>
 #include <QString>
 #include <QStringList>
 #include <QTcpSocket>
@@ -49,23 +49,26 @@ public:
     void addTask(Task* task);
     void kick();
     ~Node();
+    quint64 jobStartedAt, jobFinishedAt, jobStartedAtLocal, jobFinishedAtLocal;
 signals:
     void taskFinished(Task* task);
     void malformedMessage(QString reason);
     void unexpectedMessage(QString reason);
     void joinError(QString reason);
     void joined();
-    void left();
+    void left(QString reason);
     void statusChanged();
+    void jobFinished(QByteArray output);
 public slots:
 
 private slots:
     void readyRead();
+    void disconnected();
 
 private:
     NodeStatus status;
     QByteArray name;
-    QQueue<Task*> tasks;
+    QList<Task*> tasks;
     QByteArray buffer;
     QTcpSocket* socket;
     struct Message {
@@ -83,7 +86,7 @@ private:
     QString version;
     QStringList modules;
     Message message;
-    int taskIndex(Task* task);
+    int taskIndex(Task::Type type);
     bool processMessage();
 };
 

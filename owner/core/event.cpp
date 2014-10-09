@@ -5,10 +5,10 @@ Event::Event()
     type = None;
 }
 
-UnexpectedMessageEvent::UnexpectedMessageEvent(const QString& expectedGot)
+UnexpectedMessageEvent::UnexpectedMessageEvent(const QString& reason)
 {
     type = UnexpectedMessage;
-    this->expectedGot = expectedGot;
+    this->reason = reason;
 }
 
 MalformedMessageEvent::MalformedMessageEvent(const QString& reason)

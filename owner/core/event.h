@@ -27,8 +27,8 @@ protected:
 
 class UnexpectedMessageEvent : public Event {
 public:
-    UnexpectedMessageEvent(const QString& expectedGot);
-    QString expectedGot;
+    UnexpectedMessageEvent(const QString& reason);
+    QString reason;
 };
 
 class MalformedMessageEvent : public Event {

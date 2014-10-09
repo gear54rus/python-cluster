@@ -33,7 +33,6 @@ Finished[1]:length[4]:now,'result'           ==>
                                          <== Accept[1]
 			........................................
 Disconnect[1]:length[4]:'reason'		 ==>
-										 <== Accept[1]
 ========================================================================================									 
 Both node and owner can issue Disconnect message at any time:
 Disconnect[1]:length[4]:'reason'

@@ -18,7 +18,8 @@ SOURCES += owner.cpp \
     core/core.cpp \
     core/task.cpp \
     core/event.cpp \
-    network/node.cpp
+    network/node.cpp \
+    ui/assignwindow.cpp
 
 HEADERS  += ui/mainwindow.h \
     ui/listenwindow.h \
@@ -26,11 +27,13 @@ HEADERS  += ui/mainwindow.h \
     core/task.h \
     core/event.h \
     network/node.h \
-    global.h
+    global.h \
+    ui/assignwindow.h
 
 FORMS    += \
     ui/listenwindow.ui \
-    ui/mainwindow.ui
+    ui/mainwindow.ui \
+    ui/assignwindow.ui
 
 CONFIG += c++11
 

@@ -7,6 +7,7 @@
 #include <QMap>
 
 #include "listenwindow.h"
+#include "assignwindow.h"
 #include "../core/core.h"
 #include "../core/event.h"
 #include "../core/task.h"
@@ -40,6 +41,7 @@ private:
     };
     Ui::MainWindow* ui;
     ListenWindow* listenWindow;
+    AssignWindow* assignWindow;
     Core* core;
     QMap<quint32, quint32> visualToCore;
     QStringList logTypes;

@@ -31,13 +31,14 @@ public slots:
 private slots:
     void newTask(Task* task);
     void newNode();
-    void nodeTaskFinished(Task*);
+    void nodeTaskFinished(Task* task);
     void nodeMalformedMessage(QString reason);
     void nodeUnexpectedMessage(QString reason);
     void nodeJoinError(QString reason);
     void nodeJoined();
-    void nodeLeft();
+    void nodeLeft(QString reason);
     void nodeStatusChanged();
+    void nodeJobFinished(QByteArray output);
 
 private:
     QMutex m;

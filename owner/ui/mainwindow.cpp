@@ -1,4 +1,6 @@
 #include <QFile>
+#include <QFileInfo>
+#include <QDir>
 #include <QTextStream>
 #include <QStringList>
 #include <algorithm>
@@ -13,7 +15,8 @@
 MainWindow::MainWindow(QWidget* parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    listenWindow(new ListenWindow(this, Qt::MSWindowsFixedSizeDialogHint | Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowCloseButtonHint)),
+    listenWindow(new ListenWindow(this, Qt::CustomizeWindowHint | Qt::MSWindowsFixedSizeDialogHint | Qt::WindowTitleHint | Qt::WindowCloseButtonHint)),
+    assignWindow(new AssignWindow(this, Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMaximizeButtonHint | Qt::WindowCloseButtonHint)),
     core(new Core()),
     logTypes(QStringList("MSG") << "WARN" << "ERROR")
 {
@@ -33,7 +36,13 @@ MainWindow::MainWindow(QWidget* parent) :
         std::random_shuffle(l->begin(), l->end());
         core->setNameList(l);
     }
+    QDir dir(QApplication::applicationDirPath());
+    if(!dir.cd("tasks")) {
+        dir.mkdir("tasks");
+        dir.cd("tasks");
+    }
     log(Info, "Started!");
+    assignWindow->show();
 }
 
 MainWindow::~MainWindow()
@@ -80,7 +89,6 @@ void MainWindow::newEvent(Event* event)
             Node* node = (*nodes)[id];
             ui->listNodes->addItem(QString("[%1] %2 (%3) - %4").arg(QSN(id), node->getName(), node->getAddress(), node->getStatus()));
             visualToCore[ui->listNodes->count() - 1] = id;
-            auto x = ui->listNodes->item(0);
             log(Info, QString("'%2' (%3) has joined the cluster with ID: %1.").arg(QSN(id), node->getName(), node->getAddress()));
             break;
         }
