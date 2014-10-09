@@ -36,7 +36,7 @@ public:
     static QStringList typeText;
     static QStringList statusText;
     explicit Node(QTcpSocket* socket, QString name);
-    inline QString getName() const {
+    inline QByteArray getName() const {
         return name;
     }
     inline QString getAddress() const {
@@ -64,7 +64,7 @@ private slots:
 
 private:
     NodeStatus status;
-    QString name;
+    QByteArray name;
     QQueue<Task*> tasks;
     QByteArray buffer;
     QTcpSocket* socket;

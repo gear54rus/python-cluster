@@ -13,7 +13,7 @@ Node::Node(QTcpSocket* socket, QString name) :
 {
     status = Connecting;
     name[0] = name[0].toUpper();
-    this->name = name;
+    this->name = name.toLatin1();
     this->socket = socket;
     message.reset();
     QObject::connect(socket, SIGNAL(readyRead()), this, SLOT(readyRead()));
@@ -184,7 +184,7 @@ bool Node::processMessage()
                 version = match.captured(1);
                 modules = match.captured(2).split(',', QString::SkipEmptyParts);
                 status = Idle;
-                stream << static_cast<quint8>(Accept);
+                stream << static_cast<quint8>(Accept) << name;
                 emit joined();
             } else {
                 QByteArray reason("Invalid join message");
