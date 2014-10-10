@@ -48,6 +48,8 @@ def createMessage(messTypeName, messData = ''):
         result = bytes([messageTypes[messTypeName]]) + intToBEByteStr(len(messData)) + messData
     if messTypeName == 'Disconnect':
         result = bytes([messageTypes[messTypeName]]) + intToBEByteStr(len(messData)) + messData.encode('utf-8')
+    if messTypeName == 'Start':
+        result = bytes([messageTypes[messTypeName]]) + messData
     return result
 
 def getTypeOfMessage(msg):

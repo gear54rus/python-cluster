@@ -42,7 +42,7 @@ class connection:
         if result['type'] == 'Disconnect':
             reason = self.readLenData()
             result.update( {'reason': reason} )
-        if ((result['type'] == 'Accept') && (self.lastMessageSend == 'Join')):
+        if ((result['type'] == 'Accept') and (self.lastMessageSend == 'Join')):
             name = self.readLenData()
             result.update( {'name' : name})
         print('CONNECTION: got message, Type = {} '.format(result['type']))

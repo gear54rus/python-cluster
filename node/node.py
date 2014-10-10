@@ -55,6 +55,7 @@ class node:
             if msg['type'] == 'Accept':
                 if 'name' in msg:
                     self.name = msg['name']
+                    print('NODE: my name is {0}'.format(self.name))
                 self.status = 'idle'
             if msg['type'] == 'Reject':
                 self.status = 'idle'
@@ -74,9 +75,9 @@ class node:
             if msg['type'] == 'Start':
                 if self.status == 'ready to start':
                     self.status = 'working'
-                    self.connection.sendMessage('Accept', self.getTimeUnix64())
+                    self.connection.sendMessage('Start', self.getTimeUnix64())
                     self.result = self.worker.run(self.codePath)
-                    self.connection.sendMessage('Finished', longintToBEByteStr(self.getTimeUnix64()) + ','.encode() + self.result)
+                    self.connection.sendMessage('Finished', longintToBEByteStr(self.getTimeUnix64()) + ';'.encode() + self.result)
                     self.deleteTaskFolder()
                 else:
                     self.connection.sendMessage('Reject','Node is not ready to start. Node status: ' + self.status)
@@ -98,11 +99,12 @@ class node:
 
     def createTaskFolder(self):
         os.makedirs(self.getTaskFullName())
-        resurn self.getTaskPath()
+        return self.getTaskPath()
 
     def getTaskPath(self):
         curDir = os.getcwd();
         taskPath = curDir + '\\' + self.getTaskFullName()
+        return taskPath
 
     def saveTaskFile(self, name, data):
         curDir = os.getcwd();
@@ -111,6 +113,7 @@ class node:
         file.write(data)
         file.close()
         os.chdir(curDir)
+        return True
 
     def createTask(self):
         code = self.code
@@ -124,4 +127,5 @@ class node:
         return taskPath
     def deleteTaskFolder(self):
         shutil.rmtree(self.getTaskPath(), ignore_errors = True, onerror = None)
+        return True
 
