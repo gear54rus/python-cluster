@@ -7,7 +7,7 @@ Core::Core() :
     QObject(nullptr),
     nameList(nullptr),
     server(this),
-    nextNodeId(1)
+    nextId(1)
 {
     QObject::moveToThread(new QThread(nullptr));
     thread()->start();
@@ -46,7 +46,7 @@ void Core::newNode()
 {
     QString name = nameList->takeFirst();
     nameList->append(name);
-    Node* node = new Node(server.nextPendingConnection(), name);
+    Node* node = new Node(server.nextPendingConnection(), nextId++, name);
     QObject::connect(node, SIGNAL(taskFinished(Task*)), this, SLOT(nodeTaskFinished(Task*)), Qt::QueuedConnection);
     QObject::connect(node, SIGNAL(malformedMessage(QString)), this, SLOT(nodeMalformedMessage(QString)), Qt::QueuedConnection);
     QObject::connect(node, SIGNAL(unexpectedMessage(QString)), this, SLOT(nodeUnexpectedMessage(QString)), Qt::QueuedConnection);
@@ -55,7 +55,7 @@ void Core::newNode()
     QObject::connect(node, SIGNAL(left(QString)), this, SLOT(nodeLeft(QString)), Qt::QueuedConnection);
     QObject::connect(node, SIGNAL(statusChanged()), this, SLOT(nodeStatusChanged()), Qt::QueuedConnection);
     QObject::connect(node, SIGNAL(jobFinished(QByteArray)), this, SLOT(nodeJobFinished(QByteArray)), Qt::QueuedConnection);
-    nodes.insert(nextNodeId++, node);
+    nodes.append(node);
 }
 
 void Core::nodeTaskFinished(Task* task)
@@ -74,19 +74,22 @@ void Core::nodeUnexpectedMessage(QString reason)
 void Core::nodeJoinError(QString reason)
 {
     Node* node = static_cast<Node*>(QObject::sender());
-    quint32 i = nodes.key(node, 0);
-    if(i)
-        nodes.remove(i);
+    nodes.removeAt(nodes.indexOf(node));
     emit newEvent(new JoinErrorEvent(node->getAddress(), reason));
     node->deleteLater();
 }
 
 void Core::nodeJoined()
 {
-    emit newEvent(new NodeJoinedEvent(nodes.key(static_cast<Node*>(QObject::sender()), 0)));
+    emit newEvent(new NodeJoinedEvent(nodes.indexOf(static_cast<Node*>(QObject::sender()))));
 }
 void Core::nodeLeft(QString reason)
 {
+    Node* node = static_cast<Node*>(QObject::sender());
+    quint32 i = nodes.indexOf(node);
+    nodes.removeAt(i);
+    emit newEvent(new NodeLeftEvent(i, node->getId(), node->getName(), reason));
+    node->deleteLater();
 }
 
 void Core::nodeStatusChanged()

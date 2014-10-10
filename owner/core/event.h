@@ -40,30 +40,32 @@ public:
 class JoinErrorEvent : public Event {
 public:
     JoinErrorEvent(const QString& address, const QString& reason);
-    QString address;
-    QString reason;
+    QString address, reason;
 };
 
 class NodeJoinedEvent : public Event {
 public:
-    NodeJoinedEvent(quint32 id);
-    quint32 id;
+    NodeJoinedEvent(const quint32 index);
+    quint32 index;
 };
 
 class NodeLeftEvent : public Event {
 public:
-    NodeLeftEvent(const QString& leaveDesctiption);
-    QString leaveDesctiption;
+    NodeLeftEvent(const quint32 index, const quint32 id, const QString& name, const QString& leaveDesctiption);
+    quint32 index, id;
+    QString name, leaveDesctiption;
 };
 
-class NodeStatusChangedEvent : public NodeJoinedEvent {
+class NodeStatusChangedEvent : public Event {
 public:
-    NodeStatusChangedEvent(quint32 id);
+    NodeStatusChangedEvent(quint32 index);
+    quint32 index;
 };
 
-class JobFinishedEvent : public NodeJoinedEvent {
+class JobFinishedEvent : public Event {
 public:
-    JobFinishedEvent(quint32 id, const QByteArray& output);
+    JobFinishedEvent(const quint32 index, const QByteArray& output);
+    quint32 index;
     QByteArray output;
 };
 

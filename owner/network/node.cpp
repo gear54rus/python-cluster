@@ -9,11 +9,12 @@
 QStringList Node::typeText(QStringList("None") << "Accept" << "Reject" << "Join" << "Status" << "Job" << "Start" << "Stop" << "Finish" << "Disconnect");
 QStringList Node::statusText(QStringList("Connecting") << "Idle" << "Ready to start" << "Working");
 
-Node::Node(QTcpSocket* socket, QString name) :
+Node::Node(QTcpSocket* socket, quint32 id, QString name) :
     QObject(nullptr)
 {
     status = Connecting;
     name[0] = name[0].toUpper();
+    this->id = id;
     this->name = name.toLatin1();
     this->socket = socket;
     message.reset();
@@ -90,6 +91,11 @@ void Node::readyRead()
                             return;
                         if(socket->bytesAvailable())
                             QTimer::singleShot(0, this, SLOT(readyRead));
+                        break;
+                    }
+                    case Start: {
+                        message.length = sizeof(quint64);
+                        message.toParse = Message::MessagePart::Body;
                         break;
                     }
                     default: {
@@ -243,14 +249,16 @@ bool Node::processMessage()
                 }
                 case ReadyToStart: {
                     switch(this->message.type) {
-                        case Accept:
+                        case Start:
                         case Reject: {
                             int index = taskIndex(Task::Start);
                             if(index == -1)
                                 throw 1;
                             else {
                                 Task* t = tasks.takeAt(index);
-                                if(this->message.type == Accept) {
+                                if(this->message.type == Start) {
+                                    QDataStream s(this->message.body);
+                                    s >> jobStartedAt;
                                     t->finish(0);
                                     status = Working;
                                 } else
@@ -268,9 +276,18 @@ bool Node::processMessage()
                 case Working: {
                     switch(this->message.type) {
                         case Finished: {
-                            jobFinishedAtLocal = QDateTime::currentMSecsSinceEpoch();
-                            stream << static_cast<quint8>(Accept);
-                            emit jobFinished(this->message.body);
+                            QRegularExpressionMatch match = QRegularExpression("^(\\d+);").match(this->message.body);
+                            if(match.hasMatch()) {
+                                jobFinishedAt = match.captured(1).toLongLong(nullptr, 10);
+                                jobFinishedAtLocal = QDateTime::currentMSecsSinceEpoch();
+                                stream << static_cast<quint8>(Accept);
+                                emit jobFinished(this->message.body.right(this->message.body.length() - 9));
+                            } else {
+                                QByteArray reason("Invalid job finished message");
+                                stream << static_cast<quint8>(Reject) << reason;
+                                emit joinError(reason);
+                                throw 0;
+                            }
                             break;
                         }
                         default: {

@@ -18,7 +18,7 @@ class Core : public QObject {
 public:
     explicit Core();
     void setNameList(QStringList* list);
-    inline const QMap<quint32, Node*>* getNodeMap() {
+    inline const QList<Node*>* getNodeList() {
         return &nodes;
     }
 
@@ -44,8 +44,8 @@ private:
     QMutex m;
     QStringList* nameList;
     QTcpServer server;
-    quint32 nextNodeId;
-    QMap<quint32, Node*> nodes;
+    quint32 nextId;
+    QList<Node*> nodes;
     void listen(ListenTask* task);
 };
 

@@ -43,7 +43,6 @@ private:
     ListenWindow* listenWindow;
     AssignWindow* assignWindow;
     Core* core;
-    QMap<quint32, quint32> visualToCore;
     QStringList logTypes;
     void log(LogType type, const QString& message);
 };

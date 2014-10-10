@@ -35,7 +35,10 @@ public:
     };
     static QStringList typeText;
     static QStringList statusText;
-    explicit Node(QTcpSocket* socket, QString name);
+    explicit Node(QTcpSocket* socket, quint32 id, QString name);
+    inline quint32 getId() const {
+        return id;
+    }
     inline QByteArray getName() const {
         return name;
     }
@@ -67,6 +70,7 @@ private slots:
 
 private:
     NodeStatus status;
+    quint32 id;
     QByteArray name;
     QList<Task*> tasks;
     QByteArray buffer;

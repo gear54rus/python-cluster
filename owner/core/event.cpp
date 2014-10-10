@@ -24,27 +24,30 @@ JoinErrorEvent::JoinErrorEvent(const QString& address, const QString& reason)
     this->reason = reason;
 }
 
-NodeJoinedEvent::NodeJoinedEvent(quint32 id)
+NodeJoinedEvent::NodeJoinedEvent(const quint32 index)
 {
     type = NodeJoined;
-    this->id = id;
+    this->index = index;
 }
 
-NodeLeftEvent::NodeLeftEvent(const QString& leaveDesctiption)
+NodeLeftEvent::NodeLeftEvent(const quint32 index, const quint32 id, const QString& name, const QString& leaveDesctiption)
 {
     type = NodeLeft;
+    this->index = index;
+    this->id = id;
+    this->name = name;
     this->leaveDesctiption = leaveDesctiption;
 }
 
-NodeStatusChangedEvent::NodeStatusChangedEvent(quint32 id) :
-    NodeJoinedEvent(id)
+NodeStatusChangedEvent::NodeStatusChangedEvent(const quint32 index)
 {
     type = NodeStatusChanged;
+    this->index = index;
 }
 
-JobFinishedEvent::JobFinishedEvent(quint32 id, const QByteArray& output) :
-    NodeJoinedEvent(id)
+JobFinishedEvent::JobFinishedEvent(const quint32 index, const QByteArray& output)
 {
     type = JobFinished;
+    this->index = index;
     this->output = output;
 }

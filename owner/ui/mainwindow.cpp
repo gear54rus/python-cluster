@@ -42,7 +42,6 @@ MainWindow::MainWindow(QWidget* parent) :
         dir.cd("tasks");
     }
     log(Info, "Started!");
-    assignWindow->show();
 }
 
 MainWindow::~MainWindow()
@@ -72,9 +71,13 @@ void MainWindow::newEvent(Event* event)
 {
     switch(event->getType()) {
         case Event::UnexpectedMessage: {
+            auto e = static_cast<UnexpectedMessageEvent*>(event);
+            log(Warning, QString("got unexpected message with reason %1!").arg(e->reason));
             break;
         }
         case Event::MalformedMessage: {
+            auto e = static_cast<MalformedMessageEvent*>(event);
+            log(Warning, QString("got malformed message with reason: %1!").arg(e->reason));
             break;
         }
         case Event::JoinError: {
@@ -84,21 +87,29 @@ void MainWindow::newEvent(Event* event)
         }
         case Event::NodeJoined: {
             auto e = static_cast<NodeJoinedEvent*>(event);
-            auto nodes = core->getNodeMap();
-            quint32 id = e->id;
-            Node* node = (*nodes)[id];
-            ui->listNodes->addItem(QString("[%1] %2 (%3) - %4").arg(QSN(id), node->getName(), node->getAddress(), node->getStatus()));
-            visualToCore[ui->listNodes->count() - 1] = id;
-            log(Info, QString("'%2' (%3) has joined the cluster with ID: %1.").arg(QSN(id), node->getName(), node->getAddress()));
+            Node* node = core->getNodeList()->at(e->index);
+            ui->listNodes->addItem(QString("[%1] %2 (%3) - %4").arg(QSN(node->getId()), node->getName(), node->getAddress(), node->getStatus()));
+            log(Info, QString("'%1' (%2) has joined the cluster with ID: %3.").arg(node->getName(), node->getAddress(), QSN(node->getId())));
             break;
         }
         case Event::NodeLeft: {
+            auto e = static_cast<NodeLeftEvent*>(event);
+            delete ui->listNodes->takeItem(e->index);
+            log(Info, QString("[%1] \'%2\' has left the cluster: %3.").arg(QSN(e->id), e->name, e->leaveDesctiption));
             break;
         }
         case Event::NodeStatusChanged: {
+            auto e = static_cast<NodeStatusChangedEvent*>(event);
+            Node* node = core->getNodeList()->at(e->index);
+            ui->listNodes->item(e->index)->setText(QString("[%1] %2 (%3) - %4").arg(QSN(node->getId()), node->getName(), node->getAddress(), node->getStatus()));
+            log(Info, QString("[%1] \'%2\' has changed status to: %3").arg(QSN(node->getId()), node->getName(), node->getStatus()));
             break;
         }
         case Event::JobFinished: {
+            auto e = static_cast<JobFinishedEvent*>(event);
+            Node* node = core->getNodeList()->at(e->index);
+            log(Info, QString("[%1] \'%2\' has finished the job!").arg(QSN(node->getId()), QString(node->getName())));
+            //need to do smth with data
             break;
         }
     }
