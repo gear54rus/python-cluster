@@ -64,7 +64,7 @@ class node:
                 self.connection.sendMessage('Status', statusenum[ self.status ] )
             if msg['type'] == 'Task':
                 print('NODE: got message: {0}'.format(msg['type']))
-                if ( (self.status == 'ready to start') and (len(msg['code']) == 0):
+                if ( (self.status == 'ready to start') and (len(msg['code']) == 0)):
                     self.status = 'idle'
                     break 
                 if self.status == 'idle':
@@ -122,7 +122,6 @@ class node:
         code = self.code
         parametrs = self.parametrs
         algName = 'alg.py'
-
         taskPath = self.createTaskFolder()
         self.saveTaskFile('alg.py', self.code)
         self.saveTaskFile('input', self.parametrs)
