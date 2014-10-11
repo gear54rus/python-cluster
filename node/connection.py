@@ -4,13 +4,17 @@ import sys
 import struct
 
 class connection:
-    def __init__(self, ip, port):
+    def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.connect( ip, port )
         self.lastMessageSend = 'none'
     def connect(self, ip, port):
-        self.conn = self.sock.connect( (ip, port) )
-
+        try:
+            self.conn = self.sock.connect( (ip, port) )
+        except OSError as e:
+            if e.winerror == 10061:
+                print('can not connect to server')
+                return False
+        return True
     def readSocket(self, count):
         buff = self.sock.recv(count)
         return buff
@@ -30,7 +34,7 @@ class connection:
             return buff
         # messages with only type are not processing later
         typeOfMessage = buff
-        result = { 'type' : messages.messageTypes[self.byteToInt(buff)]}
+        result = { 'type' : messages.messageTypes[self.byteToInt(typeOfMessage)]}
         if  result['type'] == 'Reject':
             reason = self.readLenData()
             result.update( {'reason': reason} )
