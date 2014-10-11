@@ -45,6 +45,7 @@ StartTask::StartTask(quint8 nodeIndex)
 StopTask::StopTask(quint8 nodeIndex) :
     StartTask(nodeIndex)
 {
+    this->nodeIndex = nodeIndex;
     type = Stop;
 }
 

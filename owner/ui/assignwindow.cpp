@@ -32,8 +32,9 @@ void AssignWindow::accept()
     if(assign) {
         this->code = ui->editCode->toPlainText().toLatin1();
         this->input = ui->editInput->toPlainText().toLatin1();
-    }
-    QDialog::accept();
+        QDialog::accept();
+    } else
+        QDialog::reject();
 }
 
 void AssignWindow::on_buttonLoadTask_clicked()
@@ -64,10 +65,23 @@ void AssignWindow::on_buttonLoadTask_clicked()
         return;
     }
     ui->labelTaskFile->setText(taskFolder);
-    path = taskFolder;
+    //path = taskFolder;
     this->code = code.readAll();
     this->input = input.readAll();
     ui->editCode->appendPlainText((this->code.size() < 1024 * 1024) ? this->code : "File too big to display...");
     ui->editInput->appendPlainText((this->input.size() < 1024 * 1024) ? this->input : "File too big to display...");
     assign = true;
+}
+
+void AssignWindow::on_buttonCancel_clicked()
+{
+    QDialog::reject();
+}
+
+void AssignWindow::on_buttonAssignJob_clicked()
+{
+}
+
+void AssignWindow::on_buttonRemoveJob_clicked()
+{
 }

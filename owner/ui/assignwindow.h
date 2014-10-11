@@ -20,7 +20,7 @@ public:
     QByteArray name;
     QString address, python;
     QStringList modules;
-    QString path;
+    QString taskFile;
     QByteArray input, code;
     bool assign;
 public slots:
@@ -29,6 +29,12 @@ public slots:
 
 private slots:
     void on_buttonLoadTask_clicked();
+
+    void on_buttonCancel_clicked();
+
+    void on_buttonAssignJob_clicked();
+
+    void on_buttonRemoveJob_clicked();
 
 private:
     Ui::AssignWindow* ui;

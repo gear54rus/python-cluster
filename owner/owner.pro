@@ -39,3 +39,5 @@ CONFIG += c++11
 
 RESOURCES += \
     resources/resources.qrc
+
+RC_FILE = resources/icon.rc

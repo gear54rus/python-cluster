@@ -12,10 +12,12 @@ UnexpectedMessageEvent::UnexpectedMessageEvent(quint32 index, const QString& rea
     this->reason = reason;
 }
 
-MalformedMessageEvent::MalformedMessageEvent(quint32 index, const QString& reason)
+MalformedMessageEvent::MalformedMessageEvent(const quint32 index, const quint32 id, const QString& name, const QString& reason)
 {
     type = MalformedMessage;
     this->index = index;
+    this->id = id;
+    this->name = name;
     this->reason = reason;
 }
 

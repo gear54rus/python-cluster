@@ -60,6 +60,8 @@ void Node::kick()
     stream << static_cast<quint8>(Disconnect) << QByteArray("Kicked by owner");
     socket->write(message);
     socket->flush();
+    QObject::disconnect();
+    socket->close();
 }
 
 Node::~Node()

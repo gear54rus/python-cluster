@@ -86,10 +86,16 @@ void Core::nodeTaskFinished(Task* task)
 
 void Core::nodeMalformedMessage(QString reason)
 {
+    Node* node = static_cast<Node*>(QObject::sender());
+    quint32 i = nodes.indexOf(node);
+    nodes.removeAt(i);
+    emit newEvent(new MalformedMessageEvent(i, node->getId(), node->getName(), reason));
+    node->deleteLater();
 }
 
 void Core::nodeUnexpectedMessage(QString reason)
 {
+    emit newEvent(new UnexpectedMessageEvent(nodes.indexOf(static_cast<Node*>(QObject::sender())), reason));
 }
 
 void Core::nodeJoinError(QString reason)
@@ -120,6 +126,7 @@ void Core::nodeStatusChanged()
 
 void Core::nodeJobFinished(QByteArray output)
 {
+    emit JobFinishedEvent(nodes.indexOf(static_cast<Node*>(QObject::sender())), output);
 }
 
 void Core::listen(ListenTask* task)

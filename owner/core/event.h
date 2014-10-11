@@ -34,9 +34,9 @@ public:
 
 class MalformedMessageEvent : public Event {
 public:
-    MalformedMessageEvent(const quint32 index, const QString& reason);
-    quint32 index;
-    QString reason;
+    MalformedMessageEvent(const quint32 index, const quint32 id, const QString& name, const QString& reason);
+    quint32 index, id;
+    QString name, reason;
 };
 
 class JoinErrorEvent : public Event {

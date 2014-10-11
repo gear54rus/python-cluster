@@ -39,6 +39,8 @@ private slots:
 
     void on_buttonKick_clicked();
 
+    void on_listNodes_itemDoubleClicked();
+
 private:
     enum LogType {
         Info = 0,
