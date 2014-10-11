@@ -64,6 +64,9 @@ class node:
                 self.connection.sendMessage('Status', statusenum[ self.status ] )
             if msg['type'] == 'Task':
                 print('NODE: got message: {0}'.format(msg['type']))
+                if ( (self.status == 'ready to start') and (len(msg['code']) == 0):
+                    self.status = 'idle'
+                    break 
                 if self.status == 'idle':
                     self.parametrs = msg['parametrs']
                     self.code = msg['code']
