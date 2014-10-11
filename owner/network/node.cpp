@@ -253,7 +253,7 @@ bool Node::processMessage()
                             int index = taskIndex(Task::Start);
                             if(index == -1)
                                 throw 1;
-                            else {
+                            else { // add de-assign mechanism
                                 Task* t = tasks.takeAt(index);
                                 if(this->message.type == Start) {
                                     QDataStream s(this->message.body);

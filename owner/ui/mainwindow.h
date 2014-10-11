@@ -5,6 +5,7 @@
 #include <QString>
 #include <QStringList>
 #include <QMap>
+#include <QProcess>
 
 #include "listenwindow.h"
 #include "assignwindow.h"
@@ -21,6 +22,7 @@ class MainWindow : public QMainWindow {
 
 public:
     explicit MainWindow(QWidget* parent = nullptr);
+    int show();
     ~MainWindow();
 
 signals:
@@ -51,6 +53,7 @@ private:
     ListenWindow* listenWindow;
     AssignWindow* assignWindow;
     Core* core;
+    QProcess runner;
     QStringList logTypes;
     void log(LogType type, const QString& message);
 };
