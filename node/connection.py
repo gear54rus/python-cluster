@@ -45,6 +45,7 @@ class connection:
             result.update( {'reason': reason} )
         if ((result['type'] == 'Accept') and (self.lastMessageSend == 'Join')):
             name = self.readLenData()
+            name = name.decode("utf-8")
             result.update( {'name' : name})
         print('CONNECTION: got message, Type = {} '.format(result['type']))
         return result
