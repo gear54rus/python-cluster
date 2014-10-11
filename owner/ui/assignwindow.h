@@ -16,13 +16,11 @@ class AssignWindow : public QDialog {
 public:
     explicit AssignWindow(QWidget* parent = nullptr, Qt::WindowFlags f = 0);
     ~AssignWindow();
-    quint32 id;
-    QByteArray name;
-    QString address, python;
-    QStringList modules;
-    QString taskFile;
+    quint32 nodeId;
+    QByteArray nodeName;
+    QString nodeAddress, nodePython, filePath;
+    QStringList nodeModules;
     QByteArray input, code;
-    bool assign;
 public slots:
     int exec();
     void accept();

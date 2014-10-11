@@ -64,6 +64,12 @@
           <property name="text">
            <string>Listen...</string>
           </property>
+          <property name="autoDefault">
+           <bool>true</bool>
+          </property>
+          <property name="default">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
         <item>
@@ -189,6 +195,18 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <tabstops>
+  <tabstop>buttonListen</tabstop>
+  <tabstop>editLog</tabstop>
+  <tabstop>listNodes</tabstop>
+  <tabstop>buttonAssign</tabstop>
+  <tabstop>buttonStatus</tabstop>
+  <tabstop>buttonKick</tabstop>
+  <tabstop>buttonStartRemote</tabstop>
+  <tabstop>buttonStart_2</tabstop>
+  <tabstop>buttonStatusAll</tabstop>
+  <tabstop>buttonKickAll</tabstop>
+ </tabstops>
  <resources/>
  <connections/>
 </ui>

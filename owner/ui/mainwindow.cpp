@@ -1,5 +1,4 @@
 #include <QFile>
-#include <QFileInfo>
 #include <QDir>
 #include <QTextStream>
 #include <QStringList>
@@ -7,7 +6,9 @@
 #include <ctime>
 #include <QDateTime>
 #include <QListWidgetItem>
-#include <QVariant>
+#include <QMessageBox>
+#include <QRegularExpression>
+#include <QRegularExpressionMatch>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -36,12 +37,35 @@ MainWindow::MainWindow(QWidget* parent) :
         std::random_shuffle(l->begin(), l->end());
         core->setNameList(l);
     }
-    QDir dir(QApplication::applicationDirPath());
-    if(!dir.cd("tasks")) {
-        dir.mkdir("tasks");
-        dir.cd("tasks");
+    QDir::setCurrent(QApplication::applicationDirPath());
+}
+
+int MainWindow::show()
+{
+    QDir::setCurrent(QApplication::applicationDirPath());
+    QDir taskDir("tasks");
+    QFile pythonBin("python/python.exe");
+    if(!pythonBin.exists()) {
+        QMessageBox::critical(this, "Error", "Python interpreter not found ('python/python.exe')!");
+        return 1;
     }
+    runner.start(pythonBin.fileName() + " -V");
+    runner.waitForFinished(3000);
+    if(runner.state() == QProcess::Running) {
+        QMessageBox::critical(this, "Error", "Python interpreter did not respond in time!");
+        return 1;
+    }
+    QRegularExpressionMatch match = QRegularExpression("Python (\\d+\\.\\d+\\.\\d+)\\r\\n").match(runner.readAll());
+    if(!match.hasMatch()) {
+        QMessageBox::critical(this, "Error", "Unexpected output from Python interpreter!");
+        return 1;
+    }
+    log(Info, QString("Python version %1 found...").arg(match.captured(1)));
+    taskDir.removeRecursively();
+    taskDir.mkpath(".");
+    QWidget::show();
     log(Info, "Started!");
+    return 0;
 }
 
 MainWindow::~MainWindow()
@@ -215,19 +239,6 @@ void MainWindow::on_buttonAssign_clicked()
     quint32 index = ui->listNodes->currentRow();
     auto nodes = core->getNodeList();
     Node* node = nodes->at(index);
-    assignWindow->id = node->getId();
-    assignWindow->name = node->getName();
-    assignWindow->address = node->getAddress();
-    assignWindow->python = node->getVersion();
-    assignWindow->modules = node->getModules();
-    if(!assignWindow->exec())
-        return;
-//    if(nodes->at(index) == node) {
-//        //create local folder
-//        log(Info, QString("Assigning '%1' to [%2] '%3'...").arg(assignWindow->path, QSN(node->getId()), node->getName()));
-//        emit newTask(new AssignTask(index, assignWindow->input, assignWindow->code));
-//    } else
-//        log(Warning, QString("Not assigning '%1', node has left the cluster!").arg(assignWindow->path));
 }
 
 void MainWindow::on_buttonStatus_clicked()
