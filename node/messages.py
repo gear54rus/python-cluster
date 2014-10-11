@@ -39,7 +39,10 @@ def createMessage(messTypeName, messData = ''):
         result = bytes([messageTypes[messTypeName]]) + intToBEByteStr(len(messData)) + messData.encode('utf-8')
     if messTypeName == 'Accept':
         #accept message data is 64bit unix time
-        result = bytes([messageTypes[messTypeName]]) + longintToBEByteStr(messData)
+        if (messData == ''):
+            result = bytes([messageTypes[messTypeName]])
+        else:
+            result = bytes([messageTypes[messTypeName]]) + longintToBEByteStr(messData)
     if messTypeName == 'Reject':
         result = bytes([messageTypes[messTypeName]]) + intToBEByteStr(len(messData)) + messData.encode('utf-8')
     if messTypeName == 'Status':
