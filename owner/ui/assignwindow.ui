@@ -133,7 +133,7 @@
        </layout>
       </item>
       <item>
-       <widget class="QListWidget" name="listWidget"/>
+       <widget class="QListWidget" name="listModules"/>
       </item>
      </layout>
     </widget>

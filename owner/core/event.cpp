@@ -5,15 +5,17 @@ Event::Event()
     type = None;
 }
 
-UnexpectedMessageEvent::UnexpectedMessageEvent(const QString& reason)
+UnexpectedMessageEvent::UnexpectedMessageEvent(quint32 index, const QString& reason)
 {
     type = UnexpectedMessage;
+    this->index = index;
     this->reason = reason;
 }
 
-MalformedMessageEvent::MalformedMessageEvent(const QString& reason)
+MalformedMessageEvent::MalformedMessageEvent(quint32 index, const QString& reason)
 {
     type = MalformedMessage;
+    this->index = index;
     this->reason = reason;
 }
 

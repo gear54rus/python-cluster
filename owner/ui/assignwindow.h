@@ -17,8 +17,11 @@ public:
     explicit AssignWindow(QWidget* parent = nullptr, Qt::WindowFlags f = 0);
     ~AssignWindow();
     quint32 id;
-    QByteArray input;
-    QByteArray code;
+    QByteArray name;
+    QString address, python;
+    QStringList modules;
+    QString path;
+    QByteArray input, code;
     bool assign;
 public slots:
     int exec();

@@ -33,6 +33,12 @@ private slots:
 
     void on_listNodes_currentRowChanged(int currentRow);
 
+    void on_buttonAssign_clicked();
+
+    void on_buttonStatus_clicked();
+
+    void on_buttonKick_clicked();
+
 private:
     enum LogType {
         Info = 0,

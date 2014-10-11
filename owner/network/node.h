@@ -45,6 +45,12 @@ public:
     inline QString getAddress() const {
         return socket->peerAddress().toString();
     }
+    inline QString getVersion() const {
+        return version;
+    }
+    inline QStringList getModules() const {
+        return modules;
+    }
     inline QString getStatus() const {
         return statusText[status];
     }

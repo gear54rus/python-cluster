@@ -53,30 +53,30 @@ public:
 
 class AssignTask : public Task {
 public:
-    AssignTask(quint8 nodeID, const QByteArray& input, const QByteArray& code);
-    quint8 nodeID;
+    AssignTask(quint8 nodeIndex, const QByteArray& input, const QByteArray& code);
+    quint8 nodeIndex;
     QByteArray input, code;
 };
 
 class StartTask : public Task {
 public:
-    StartTask(quint8 nodeID);
-    quint8 nodeID;
+    StartTask(quint8 nodeIndex);
+    quint8 nodeIndex;
 };
 
 class StopTask : public StartTask {
 public:
-    StopTask(quint8 nodeID);
+    StopTask(quint8 nodeIndex);
 };
 
 class KickTask : public StartTask {
 public:
-    KickTask(quint8 nodeID);
+    KickTask(quint8 nodeIndex);
 };
 
 class GetStatusTask : public StartTask {
 public:
-    GetStatusTask(quint8 nodeID);
+    GetStatusTask(quint8 nodeIndex);
 };
 
 #endif // TASK_H

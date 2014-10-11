@@ -33,8 +33,7 @@ void Node::addTask(Task* task)
         }
         case Task::Assign: {
             auto t = static_cast<AssignTask*>(task);
-            //quint32 length = sizeof(quint32) * 2 + inputLength + codeLenght; // by stupid request
-            stream << static_cast<quint8>(Job) <</* static_cast<quint32>(length) << static_cast<quint32>(t->input.length()) <<*/ t->input /*<< static_cast<quint32>(t->code.length())*/ << t->code;
+            stream << static_cast<quint8>(Job) << t->input << t->code;
             break;
         }
         case Task::Start: {
@@ -57,7 +56,7 @@ void Node::addTask(Task* task)
 void Node::kick()
 {
     QByteArray message;
-    QDataStream stream(message);
+    QDataStream stream(&message, QIODevice::WriteOnly);
     stream << static_cast<quint8>(Disconnect) << QByteArray("Kicked by owner");
     socket->write(message);
     socket->flush();
@@ -178,7 +177,7 @@ void Node::Message::reset()
 
 int Node::taskIndex(Task::Type type)
 {
-    for(qint32 i; i < tasks.length(); i++)
+    for(qint32 i = 0; i < tasks.length(); i++)
         if(tasks[i]->getType() == type)
             return i;
     return -1;
@@ -200,10 +199,8 @@ bool Node::processMessage()
         if(index == -1) {
             stream << static_cast<quint8>(Accept);
             emit statusChanged();
-        } else {
-            tasks.removeAt(index);
-            emit taskFinished(tasks[index]);
-        }
+        } else
+            emit taskFinished(tasks.takeAt(index));
     } else {
         try {
             switch(status) {

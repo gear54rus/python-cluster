@@ -24,19 +24,40 @@ void Core::setNameList(QStringList* list)
 
 void Core::newTask(Task* task)
 {
-    QString unknownType("Unknown type");
     switch(task->getType()) {
         case Task::Listen: {
-            if(auto t = dynamic_cast<ListenTask*>(task))
-                listen(t);
-            else {
-                task->finish(1, unknownType);
-                emit taskFinished(task);
-            }
+            listen(static_cast<ListenTask*>(task));
+            break;
+        }
+        case Task::Assign: {
+            auto t = static_cast<AssignTask*>(task);
+            nodes[t->nodeIndex]->addTask(t);
+            break;
+        }
+        case Task::GetStatus: {
+            auto t = static_cast<GetStatusTask*>(task);
+            nodes[t->nodeIndex]->addTask(t);
+            break;
+        }
+        case Task::Kick: {
+            auto t = static_cast<KickTask*>(task);
+            nodes[t->nodeIndex]->kick();
+            t->finish(0);
+            emit taskFinished(t);
+            break;
+        }
+        case Task::Start: {
+            auto t = static_cast<StartTask*>(task);
+            nodes[t->nodeIndex]->addTask(t);
+            break;
+        }
+        case Task::Stop: {
+            auto t = static_cast<StopTask*>(task);
+            nodes[t->nodeIndex]->addTask(t);
             break;
         }
         default: {
-            task->finish(1, unknownType);
+            task->finish(1, "Unknown task type");
             emit taskFinished(task);
         }
     }
@@ -60,7 +81,7 @@ void Core::newNode()
 
 void Core::nodeTaskFinished(Task* task)
 {
-    delete task;
+    emit taskFinished(task); // 10/10 perfect design
 }
 
 void Core::nodeMalformedMessage(QString reason)
@@ -94,6 +115,7 @@ void Core::nodeLeft(QString reason)
 
 void Core::nodeStatusChanged()
 {
+    emit newEvent(new NodeStatusChangedEvent(nodes.indexOf(static_cast<Node*>(QObject::sender()))));
 }
 
 void Core::nodeJobFinished(QByteArray output)

@@ -6,8 +6,8 @@
 
 AssignWindow::AssignWindow(QWidget* parent, Qt::WindowFlags f) :
     QDialog(parent, f),
-    ui(new Ui::AssignWindow),
-    assign(false)
+    assign(false),
+    ui(new Ui::AssignWindow)
 {
     ui->setupUi(this);
 }
@@ -19,6 +19,12 @@ AssignWindow::~AssignWindow()
 
 int AssignWindow::exec()
 {
+    ui->labelNodeID->setText(QSN(id));
+    ui->labelNodeName->setText(name);
+    ui->labelNodeIP->setText(address);
+    ui->labelNodeVer->setText(python);
+    ui->listModules->addItems(modules);
+    QDialog::exec();
 }
 
 void AssignWindow::accept()
@@ -58,6 +64,7 @@ void AssignWindow::on_buttonLoadTask_clicked()
         return;
     }
     ui->labelTaskFile->setText(taskFolder);
+    path = taskFolder;
     this->code = code.readAll();
     this->input = input.readAll();
     ui->editCode->appendPlainText((this->code.size() < 1024 * 1024) ? this->code : "File too big to display...");

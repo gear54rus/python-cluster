@@ -51,6 +51,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::taskFinished(Task* task)
 {
+    auto nodes = core->getNodeList();
     switch(task->getType()) {
         case Task::Listen: {
             auto t = static_cast<ListenTask*>(task);
@@ -58,6 +59,28 @@ void MainWindow::taskFinished(Task* task)
                 log(Error, QString("Unable to bind to %1:%2 (%3). Stopped listening.").arg(t->address.toString(), QSN(t->port), t->getMessage()));
             else
                 log(Info, QString("Successfully bound to %1:%2").arg(t->address.toString(), QSN(t->port)));
+            break;
+        }
+        case Task::Assign: {
+            auto t = static_cast<AssignTask*>(task);
+            quint32 index =  t->nodeIndex;
+            Node* node = nodes->at(index);
+            if(t->getCode())
+                log(Info, QString("[%1] %2 has rejected the task: %3!").arg(QSN(node->getId()), node->getName(), t->getMessage()));
+            else
+                log(Error, QString("Task was successfully assigned to [%1] %2!").arg(QSN(node->getId()), QString(node->getName())));
+            ui->listNodes->item(index)->setText(QString("[%1] %2 (%3) - %4").arg(QSN(node->getId()), node->getName(), node->getAddress(), node->getStatus()));
+            break;
+        }
+        case Task::GetStatus: {
+            auto t = static_cast<AssignTask*>(task);
+            quint32 index =  t->nodeIndex;
+            Node* node = nodes->at(index);
+            if(t->getCode())
+                log(Error, QString("Unable to retrieve status of [%1] %2!").arg(QSN(node->getId()), QString(node->getName())));
+            else
+                log(Info, QString("Status of [%1] %2 is: %3!").arg(QSN(node->getId()), node->getName(), node->getStatus()));
+            ui->listNodes->item(index)->setText(QString("[%1] %2 (%3) - %4").arg(QSN(node->getId()), node->getName(), node->getAddress(), node->getStatus()));
             break;
         }
         default: {
@@ -72,12 +95,15 @@ void MainWindow::newEvent(Event* event)
     switch(event->getType()) {
         case Event::UnexpectedMessage: {
             auto e = static_cast<UnexpectedMessageEvent*>(event);
-            log(Warning, QString("got unexpected message with reason %1!").arg(e->reason));
+            Node* node = core->getNodeList()->at(e->index);
+            log(Warning, QString("Received unexpected message from [%1] %2: %3!").arg(QSN(node->getId()), node->getName(), e->reason));
             break;
         }
         case Event::MalformedMessage: {
             auto e = static_cast<MalformedMessageEvent*>(event);
-            log(Warning, QString("got malformed message with reason: %1!").arg(e->reason));
+            Node* node = core->getNodeList()->at(e->index);
+            delete ui->listNodes->takeItem(e->index);
+            log(Warning, QString("Received unexpected message from [%1] %2: %3! Node was kicked!").arg(QSN(node->getId()), node->getName(), e->reason));
             break;
         }
         case Event::JoinError: {
@@ -95,20 +121,20 @@ void MainWindow::newEvent(Event* event)
         case Event::NodeLeft: {
             auto e = static_cast<NodeLeftEvent*>(event);
             delete ui->listNodes->takeItem(e->index);
-            log(Info, QString("[%1] \'%2\' has left the cluster: %3.").arg(QSN(e->id), e->name, e->leaveDesctiption));
+            log(Info, QString("[%1] '%2' has left the cluster: %3.").arg(QSN(e->id), e->name, e->leaveDesctiption));
             break;
         }
         case Event::NodeStatusChanged: {
             auto e = static_cast<NodeStatusChangedEvent*>(event);
             Node* node = core->getNodeList()->at(e->index);
             ui->listNodes->item(e->index)->setText(QString("[%1] %2 (%3) - %4").arg(QSN(node->getId()), node->getName(), node->getAddress(), node->getStatus()));
-            log(Info, QString("[%1] \'%2\' has changed status to: %3").arg(QSN(node->getId()), node->getName(), node->getStatus()));
+            log(Info, QString("[%1] '%2' has changed its status to: %3.").arg(QSN(node->getId()), node->getName(), node->getStatus()));
             break;
         }
         case Event::JobFinished: {
             auto e = static_cast<JobFinishedEvent*>(event);
             Node* node = core->getNodeList()->at(e->index);
-            log(Info, QString("[%1] \'%2\' has finished the job!").arg(QSN(node->getId()), QString(node->getName())));
+            log(Info, QString("[%1] '%2' has finished the job!").arg(QSN(node->getId()), QString(node->getName())));
             //need to do smth with data
             break;
         }
@@ -132,4 +158,49 @@ void MainWindow::log(LogType type, const QString& message)
 
 void MainWindow::on_listNodes_currentRowChanged(int currentRow)
 {
+    if(currentRow == -1) {
+        ui->buttonAssign->setEnabled(false);
+        ui->buttonStatus->setEnabled(false);
+        ui->buttonKick->setEnabled(false);
+    } else {
+        ui->buttonAssign->setEnabled(true);
+        ui->buttonStatus->setEnabled(true);
+        ui->buttonKick->setEnabled(true);
+    }
+}
+
+void MainWindow::on_buttonAssign_clicked()
+{
+    quint32 index = ui->listNodes->currentRow();
+    auto nodes = core->getNodeList();
+    Node* node = nodes->at(index);
+    assignWindow->id = node->getId();
+    assignWindow->name = node->getName();
+    assignWindow->address = node->getAddress();
+    assignWindow->python = node->getVersion();
+    assignWindow->modules = node->getModules();
+    if(!assignWindow->exec())
+        return;
+    if(nodes->at(index) == node) {
+        //create local folder
+        log(Info, QString("Assigning '%1' to [%2] '%3'...").arg(assignWindow->path, QSN(node->getId()), node->getName()));
+        emit newTask(new AssignTask(index, assignWindow->input, assignWindow->code));
+    } else
+        log(Warning, QString("Not assigning '%1', node has left the cluster!").arg(assignWindow->path));
+}
+
+void MainWindow::on_buttonStatus_clicked()
+{
+    quint32 index = ui->listNodes->currentRow();
+    Node* node = core->getNodeList()->at(index);
+    log(Info, QString("Checking status of [%2] '%3'...").arg(QSN(node->getId()), QString(node->getName())));
+    emit newTask(new GetStatusTask(index));
+}
+
+void MainWindow::on_buttonKick_clicked()
+{
+    quint32 index = ui->listNodes->currentRow();
+    Node* node = core->getNodeList()->at(index);
+    log(Info, QString("Kicking [%2] '%3'...").arg(QSN(node->getId()), QString(node->getName())));
+    emit newTask(new KickTask(index));
 }

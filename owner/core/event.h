@@ -27,13 +27,15 @@ protected:
 
 class UnexpectedMessageEvent : public Event {
 public:
-    UnexpectedMessageEvent(const QString& reason);
+    UnexpectedMessageEvent(const quint32 index, const QString& reason);
+    quint32 index;
     QString reason;
 };
 
 class MalformedMessageEvent : public Event {
 public:
-    MalformedMessageEvent(const QString& reason);
+    MalformedMessageEvent(const quint32 index, const QString& reason);
+    quint32 index;
     QString reason;
 };
 
