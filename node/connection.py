@@ -41,6 +41,7 @@ class connection:
             result.update ({'code' : code})
         if result['type'] == 'Disconnect':
             reason = self.readLenData()
+            reason = reason.decode("utf-8")
             result.update( {'reason': reason} )
         if ((result['type'] == 'Accept') and (self.lastMessageSend == 'Join')):
             name = self.readLenData()
