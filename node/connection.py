@@ -26,8 +26,11 @@ class connection:
     def checkSocket(self):
         try:
             buff = self.sock.recv(1)
+        except Exception as e:
+            #10054 - host reset connection
+            if e.errno == 10054:
+                return { 'type': 'Disconnect', 'reason': 'server has broken connection'}
         except:
-            #if we can get data from socket then tell to node disconnect
             print ("Unexpected error: {0}".format( sys.exc_info()[0] ) )
             return { 'type': 'Disconnect', 'reason': 'coz of error'}
         if not buff: # empty socket
