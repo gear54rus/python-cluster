@@ -24,6 +24,7 @@ statusenum = {
 
 def longintToBEByteStr(number):
     return struct.pack('>Q', number)
+
 def getModulesList():
         import subprocess
         import re
@@ -32,7 +33,6 @@ def getModulesList():
         out = out[76:len(out) - 158].decode("utf-8") #Cut trash
         out = out.replace('_', '')
         modulesArray = out.split()   #Тут массив с модулями
-        print(modulesArray)
         modulesList = ','.join(modulesArray) #Тут модули через запятую
         modulesList = modulesList
         return modulesList
