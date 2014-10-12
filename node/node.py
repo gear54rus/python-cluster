@@ -44,8 +44,7 @@ class node:
        self.connection = connection.connection()
        if not self.connection.connect(ip, port):
            return
-       cur_version = '{0}.{1}.{2};'.format(sys.version_info[0],sys.version_info[1],sys.version_info[2])
-       cur_version = cur_version + ';' + getModulesList()
+       cur_version = '{0}.{1}.{2};'.format(sys.version_info[0],sys.version_info[1],sys.version_info[2]) + getModulesList()
        self.connection.sendMessage('Join', cur_version)
        self.status = 'disconnected'
        self.codePath = ''
