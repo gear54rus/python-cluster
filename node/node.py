@@ -24,7 +24,18 @@ statusenum = {
 
 def longintToBEByteStr(number):
     return struct.pack('>Q', number)
-
+def getModulesList():
+        import subprocess
+        import re
+        proc = subprocess.Popen(["python", "-c", "help('modules')"], stdout=subprocess.PIPE)
+        out = proc.communicate()[0]  #Тут список модулей через пробел
+        out = out[76:len(out) - 158].decode("utf-8") #Cut trash
+        out = out.replace('_', '')
+        modulesArray = out.split()   #Тут массив с модулями
+        print(modulesArray)
+        modulesList = ','.join(modulesArray) #Тут модули через запятую
+        modulesList = modulesList
+        return modulesList
 
 
 class node:
@@ -34,6 +45,7 @@ class node:
        if not self.connection.connect(ip, port):
            return
        cur_version = '{0}.{1}.{2};'.format(sys.version_info[0],sys.version_info[1],sys.version_info[2])
+       cur_version = cur_version + ';' + getModulesList()
        self.connection.sendMessage('Join', cur_version)
        self.status = 'disconnected'
        self.codePath = ''
@@ -131,7 +143,11 @@ class node:
         self.saveTaskFile('input', self.parametrs)
 
         return taskPath
+
     def deleteTaskFolder(self):
         shutil.rmtree(self.getTaskPath(), ignore_errors = True, onerror = None)
         return True
+
+
+
 
