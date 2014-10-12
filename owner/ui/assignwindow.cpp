@@ -53,6 +53,8 @@ int AssignWindow::exec()
         ui->editCode->setEnabled(false);
         ui->editInput->clear();
         ui->editInput->setEnabled(false);
+        ui->buttonAssignJob->setEnabled(false);
+        ui->buttonRemoveJob->setEnabled(false);
     }
     return QDialog::exec();
 }

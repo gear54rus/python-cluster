@@ -54,6 +54,9 @@ public:
     inline QString getStatus() const {
         return statusText[status];
     }
+    inline bool getReadyToStart() const {
+        return status == ReadyToStart;
+    }
 
     void addTask(Task* task);
     void kick();

@@ -282,8 +282,11 @@ void MainWindow::on_buttonAssign_clicked()
                 code.write(assignWindow->code);
                 log(Info, QString("Assigning '%1' to [%2] '%3'...").arg(assignWindow->jobPath, QSN(nodeId), nodeName));
             } else {
+                path.close();
+                input.close();
+                code.close();
                 taskDir.removeRecursively();
-                log(Info, QString("Removing task from [%1] '%2'...").arg(assignWindow->jobPath, QSN(nodeId), nodeName));
+                log(Info, QString("Removing task from [%1] '%2'...").arg(QSN(nodeId), nodeName));
             }
             emit newTask(new AssignTask(index, assignWindow->input, assignWindow->code));
         } else
@@ -307,4 +310,21 @@ void MainWindow::on_buttonKick_clicked()
 void MainWindow::on_listNodes_itemDoubleClicked()
 {
     on_buttonAssign_clicked();
+}
+
+void MainWindow::on_buttonStartRemote_clicked()
+{
+    auto nodes = core->getNodeList();
+    Node* node;
+    for(qint32 i = 0; i < nodes->length(); i++) {
+        node = nodes->at(i);
+        if(node->getReadyToStart()) {
+            log(Info, QString("Starting remote job on [%1] '%2'...").arg(QSN(node->getId()), QString(node->getName())));
+            emit newTask(new StartTask(i));
+        }
+    }
+}
+
+void MainWindow::on_buttonStartLocal_clicked()
+{
 }

@@ -92,7 +92,7 @@ void Node::readyRead()
                 quint8 t;
                 QDataStream(socket->read(sizeof(quint8))) >> t;
                 if((t < static_cast<quint8>(Accept)) || (t > static_cast<quint8>(Disconnect)))
-                    throw "Unknown message type";
+                    throw QString("Unknown message type");
                 message.type = static_cast<MessageType>(t);
                 message.toParse = Message::MessagePart::Length;
                 switch(message.type) {
@@ -100,7 +100,7 @@ void Node::readyRead()
                         if(!processMessage())
                             return;
                         if(socket->bytesAvailable())
-                            QTimer::singleShot(0, this, SLOT(readyRead));
+                            QTimer::singleShot(0, this, SLOT(readyRead()));
                         break;
                     }
                     case Start: {
@@ -123,12 +123,12 @@ void Node::readyRead()
                         quint8 s;
                         stream >> s;
                         if((s < static_cast<quint8>(Idle)) || (s > static_cast<quint8>(Working)))
-                            throw "Unknown node status";
+                            throw QString("Unknown node status");
                         message.body.append(s);
                         if(!processMessage())
                             return;
                         if(socket->bytesAvailable())
-                            QTimer::singleShot(0, this, SLOT(readyRead));
+                            QTimer::singleShot(0, this, SLOT(readyRead()));
                         break;
                     }
                     default: {
@@ -139,7 +139,7 @@ void Node::readyRead()
                             quint32 l;
                             stream >> l;
                             if((l > MAX_MESSAGE_LENGTH) || (l == 0))
-                                throw "Invalid message length";
+                                throw QString("Invalid message length");
                             message.length = l;
                             buffer.clear();
                             message.toParse = Message::MessagePart::Body;
@@ -152,13 +152,14 @@ void Node::readyRead()
                 break;
             }
             case Message::MessagePart::Body: {
-                quint8 forBody = message.length - buffer.length();
+                quint32 forBody = message.length - buffer.length();
                 if(available >= forBody) {
-                    message.body.append(socket->read(forBody));
+                    buffer.append(socket->read(forBody));
+                    message.body.append(buffer);
                     if(!processMessage())
                         return;
                     if(socket->bytesAvailable())
-                        QTimer::singleShot(0, this, SLOT(readyRead));
+                        QTimer::singleShot(0, this, SLOT(readyRead()));
                 } else
                     buffer.append(socket->readAll());
                 break;
@@ -216,10 +217,11 @@ bool Node::processMessage()
         try {
             switch(status) {
                 case Connecting: {
-                    QRegularExpressionMatch match = QRegularExpression("^(\\d+\\.\\d+\\.\\d+);((?:[a-z_][a-z0-9_]*,?)*)$").match(this->message.body);
+                    QRegularExpressionMatch match = QRegularExpression("^(\\d+\\.\\d+\\.\\d+);((?:[a-z_][a-z0-9_]*,?)*)").match(this->message.body);
                     if(match.hasMatch()) {
                         version = match.captured(1);
                         modules = match.captured(2).split(',', QString::SkipEmptyParts);
+                        modules.sort();
                         status = Idle;
                         stream << static_cast<quint8>(Accept) << name;
                         emit joined();
@@ -258,11 +260,10 @@ bool Node::processMessage()
                 case ReadyToStart: {
                     switch(this->message.type) {
                         case Start:
+                        case Accept:
                         case Reject: {
-                            int index = taskIndex(Task::Start);
-                            if(index == -1)
-                                throw 1;
-                            else { // add de-assign mechanism
+                            int index;
+                            if((index = taskIndex(Task::Start)) != -1)  {
                                 Task* t = tasks.takeAt(index);
                                 if(this->message.type == Start) {
                                     QDataStream s(this->message.body);
@@ -272,7 +273,16 @@ bool Node::processMessage()
                                 } else
                                     t->finish(1, this->message.body);
                                 emit taskFinished(t);
-                            }
+                            } else if((index = taskIndex(Task::Assign)) != -1) {
+                                Task* t = tasks.takeAt(index);
+                                if(this->message.type == Accept) {
+                                    t->finish(0);
+                                    status = Idle;
+                                } else
+                                    t->finish(1, "Unable to remove job");
+                                emit taskFinished(t);
+                            } else
+                                throw 1;
                             break;
                         }
                         default: {
@@ -284,9 +294,9 @@ bool Node::processMessage()
                 case Working: {
                     switch(this->message.type) {
                         case Finished: {
-                            QRegularExpressionMatch match = QRegularExpression("^(\\d+);").match(this->message.body);
-                            if(match.hasMatch()) {
-                                jobFinishedAt = match.captured(1).toLongLong(nullptr, 10);
+                            if(this->message.body[8] == ';') {
+                                QDataStream s(this->message.body);
+                                s >> jobFinishedAt;
                                 jobFinishedAtLocal = QDateTime::currentMSecsSinceEpoch();
                                 stream << static_cast<quint8>(Accept);
                                 emit jobFinished(this->message.body.right(this->message.body.length() - 9));

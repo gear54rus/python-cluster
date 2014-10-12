@@ -43,6 +43,10 @@ private slots:
 
     void on_listNodes_itemDoubleClicked();
 
+    void on_buttonStartRemote_clicked();
+
+    void on_buttonStartLocal_clicked();
+
 private:
     enum LogType {
         Info = 0,
