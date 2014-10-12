@@ -4,7 +4,6 @@ import messages
 import sys
 import datetime
 import os
-import random
 import time
 import shutil
 import struct
@@ -52,11 +51,13 @@ class node:
        self.name = 'defaultNodeName'
        self.worker = worker.worker()
        self.run()
+
     def getTimeUnix64(self):
         timestamp = datetime.datetime.now()
         timestamp = time.mktime(timestamp.timetuple())*1e3 + timestamp.microsecond/1e3
         timestamp = int (timestamp * 1000)
         return timestamp
+
     def run(self):
         var = 'true'
         while var:
@@ -81,7 +82,9 @@ class node:
                 if (len(msg['code']) == 0):
                     print('NODE: got task, but receives task message with code length of 0. Waiting for new task.')
                     self.status = 'idle'
-                    break 
+                    self.deleteTaskFolder()
+                    self.connection.sendMessage('Accept')
+                    continue
                 if self.status == 'idle':
                     self.parametrs = msg['parametrs']
                     self.code = msg['code']
@@ -93,10 +96,13 @@ class node:
             if msg['type'] == 'Start':
                 if self.status == 'ready to start':
                     self.status = 'working'
-                    self.connection.sendMessage('Start', self.getTimeUnix64())
-                    self.result = self.worker.run(self.codePath)
-                    self.connection.sendMessage('Finished', longintToBEByteStr(self.getTimeUnix64()) + ';'.encode() + self.result)
+                    self.connection.sendMessage('Start', longintToBEByteStr(self.getTimeUnix64()))
+                    self.result = self.worker.run(self.codePath,self.name)
+                    print(self.result)
+                    self.connection.sendMessage('Finished', longintToBEByteStr(self.getTimeUnix64()) + ';'.encode() + self.result.encode())
                     self.deleteTaskFolder()
+                    self.status = 'idle'
+                    print('NODE: Has finished task, waiting new task')
                 else:
                     self.connection.sendMessage('Reject','Node is not ready to start. Node status: ' + self.status)
             if msg['type'] == 'Disconnect':
