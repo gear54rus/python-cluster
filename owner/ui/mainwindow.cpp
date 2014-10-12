@@ -100,10 +100,15 @@ void MainWindow::taskFinished(Task* task)
             auto t = static_cast<AssignTask*>(task);
             quint32 index =  t->nodeIndex;
             Node* node = nodes->at(index);
-            if(t->getCode())
-                log(Error, QString("[%1] '%2' has rejected the job: %3!").arg(QSN(node->getId()), node->getName(), t->getMessage()));
-            else
-                log(Info, QString("Task was successfully assigned to [%1] '%2'!").arg(QSN(node->getId()), QString(node->getName())));
+            if(t->getCode()) {
+                if(t->code.length())
+                    log(Error, QString("[%1] '%2' has rejected the job: %3!").arg(QSN(node->getId()), node->getName(), t->getMessage()));
+            } else {
+                if(t->code.length())
+                    log(Info, QString("Task was successfully assigned to [%1] '%2'!").arg(QSN(node->getId()), QString(node->getName())));
+                else
+                    log(Info, QString("Task was successfully removed from [%1] '%2'!").arg(QSN(node->getId()), QString(node->getName())));
+            }
             ui->listNodes->item(index)->setText(QString("[%1] %2 (%3) - %4").arg(QSN(node->getId()), node->getName(), node->getAddress(), node->getStatus()));
             break;
         }
@@ -133,12 +138,12 @@ void MainWindow::taskFinished(Task* task)
         case Task::Kick: {
             auto t = static_cast<KickTask*>(task);
             quint32 index =  t->nodeIndex;
-            Node* node = nodes->at(index);
             if(t->getCode()) {
+                Node* node = nodes->at(index);
                 log(Error, QString("Unable to kick [%1] '%2' from the cluster: %3.").arg(QSN(node->getId()), QString(node->getName()), t->getMessage()));
                 ui->listNodes->item(index)->setText(QString("[%1] %2 (%3) - %4").arg(QSN(node->getId()), node->getName(), node->getAddress(), node->getStatus()));
             } else {
-                log(Info, QString("[%1] '%2' was kicked from the cluster.").arg(QSN(node->getId()), QString(node->getName())));
+                log(Info, QString("[%1] '%2' was kicked from the cluster.").arg(QSN(t->nodeId), QString(t->nodeName)));
                 delete ui->listNodes->takeItem(index);
             }
             break;
@@ -149,7 +154,6 @@ void MainWindow::taskFinished(Task* task)
     }
     delete task;
 }
-
 void MainWindow::newEvent(Event* event)
 {
     switch(event->getType()) {
@@ -206,7 +210,6 @@ void MainWindow::newEvent(Event* event)
     }
     delete event;
 }
-
 void MainWindow::on_buttonListen_clicked()
 {
     if(listenWindow->exec()) {
@@ -215,12 +218,10 @@ void MainWindow::on_buttonListen_clicked()
         emit newTask(task);
     }
 }
-
 void MainWindow::log(LogType type, const QString& message)
 {
     ui->editLog->appendPlainText(QString("%1 [%2] %3").arg(QDateTime::currentDateTime().toString("dd-MM-yyyy hh:mm:ss.zzz"), logTypes[type], message));
 }
-
 void MainWindow::on_listNodes_currentRowChanged(int currentRow)
 {
     if(currentRow == -1) {
@@ -233,14 +234,62 @@ void MainWindow::on_listNodes_currentRowChanged(int currentRow)
         ui->buttonKick->setEnabled(true);
     }
 }
-
 void MainWindow::on_buttonAssign_clicked()
 {
     quint32 index = ui->listNodes->currentRow();
     auto nodes = core->getNodeList();
     Node* node = nodes->at(index);
+    quint32 nodeId = node->getId();
+    QString nodeName = node->getName();
+    QDir taskDir("tasks/" + QSN(node->getId()));
+    QFile path(taskDir.path() + "/path"), code(taskDir.path() + "/code"), input(taskDir.path() + "/input");
+    assignWindow->nodeId = nodeId;
+    assignWindow->nodeName = nodeName;
+    assignWindow->nodeAddress = node->getAddress();
+    assignWindow->nodePython = node->getVersion();
+    assignWindow->nodeModules = node->getModules();
+    if(!taskDir.exists()) {
+        assignWindow->hadJob = false;
+        assignWindow->jobPath.clear();
+        assignWindow->code.clear();
+        assignWindow->input.clear();
+    } else {
+        assignWindow->hadJob = true;
+        path.open(QFile::ReadOnly);
+        assignWindow->jobPath = path.readAll();
+        code.open(QFile::ReadOnly);
+        if(code.size() < MAX_EDITOR_DISPLAY_LENGTH)
+            assignWindow->code = code.readAll();
+        else
+            assignWindow->code.clear();
+        input.open(QFile::ReadOnly);
+        if(input.size() < MAX_EDITOR_DISPLAY_LENGTH)
+            assignWindow->input = input.readAll();
+        else
+            assignWindow->input.clear();
+    }
+    assignWindow->inputChanged = false;
+    assignWindow->codeChanged = false;
+    if(assignWindow->exec()) {
+        if(nodes->at(index) == node) {
+            taskDir.mkpath(".");
+            if(assignWindow->code.length()) {
+                path.open(QFile::WriteOnly | QFile::Truncate);
+                path.write(assignWindow->jobPath.toLocal8Bit());
+                input.open(QFile::WriteOnly | QFile::Truncate);
+                input.write(assignWindow->input);
+                code.open(QFile::WriteOnly | QFile::Truncate);
+                code.write(assignWindow->code);
+                log(Info, QString("Assigning '%1' to [%2] '%3'...").arg(assignWindow->jobPath, QSN(nodeId), nodeName));
+            } else {
+                taskDir.removeRecursively();
+                log(Info, QString("Removing task from [%1] '%2'...").arg(assignWindow->jobPath, QSN(nodeId), nodeName));
+            }
+            emit newTask(new AssignTask(index, assignWindow->input, assignWindow->code));
+        } else
+            log(Warning, QString("Failed to assign task: [%1] '%2' is no longer in the cluster!").arg(QSN(nodeId), nodeName));
+    }
 }
-
 void MainWindow::on_buttonStatus_clicked()
 {
     quint32 index = ui->listNodes->currentRow();
@@ -248,7 +297,6 @@ void MainWindow::on_buttonStatus_clicked()
     log(Info, QString("Checking status of [%2] '%3'...").arg(QSN(node->getId()), QString(node->getName())));
     emit newTask(new GetStatusTask(index));
 }
-
 void MainWindow::on_buttonKick_clicked()
 {
     quint32 index = ui->listNodes->currentRow();
@@ -256,7 +304,6 @@ void MainWindow::on_buttonKick_clicked()
     log(Info, QString("Kicking [%2] '%3'...").arg(QSN(node->getId()), QString(node->getName())));
     emit newTask(new KickTask(index));
 }
-
 void MainWindow::on_listNodes_itemDoubleClicked()
 {
     on_buttonAssign_clicked();

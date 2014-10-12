@@ -136,7 +136,13 @@
        </layout>
       </item>
       <item>
-       <widget class="QListWidget" name="listModules"/>
+       <widget class="QListWidget" name="listModules">
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+       </widget>
       </item>
      </layout>
     </widget>
@@ -166,7 +172,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QLabel" name="labelTaskFile">
+         <widget class="QLabel" name="labelJobFile">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
             <horstretch>0</horstretch>
@@ -199,10 +205,28 @@
            </widget>
           </item>
           <item row="1" column="0">
-           <widget class="QPlainTextEdit" name="editInput"/>
+           <widget class="QPlainTextEdit" name="editInput">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="font">
+             <font>
+              <family>Courier New</family>
+             </font>
+            </property>
+           </widget>
           </item>
           <item row="1" column="1">
-           <widget class="QPlainTextEdit" name="editCode"/>
+           <widget class="QPlainTextEdit" name="editCode">
+            <property name="enabled">
+             <bool>false</bool>
+            </property>
+            <property name="font">
+             <font>
+              <family>Courier New</family>
+             </font>
+            </property>
+           </widget>
           </item>
          </layout>
         </item>
@@ -212,6 +236,9 @@
        <layout class="QHBoxLayout" name="horizontalLayout_9">
         <item>
          <widget class="QPushButton" name="buttonRemoveJob">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="minimumSize">
            <size>
             <width>100</width>
@@ -244,6 +271,9 @@
         </item>
         <item>
          <widget class="QPushButton" name="buttonAssignJob">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
           <property name="minimumSize">
            <size>
             <width>100</width>

@@ -34,7 +34,7 @@ private slots:
     void nodeTaskFinished(Task* task);
     void nodeMalformedMessage(QString reason);
     void nodeUnexpectedMessage(QString reason);
-    void nodeJoinError(QString reason);
+    void nodeJoinError(QString address, QString reason);
     void nodeJoined();
     void nodeLeft(QString reason);
     void nodeStatusChanged();

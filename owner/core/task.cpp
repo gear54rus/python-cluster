@@ -28,7 +28,7 @@ ListenTask::ListenTask(const QHostAddress& address, quint16 port)
     type = Listen;
 }
 
-AssignTask::AssignTask(quint8 nodeIndex, const QByteArray& input, const QByteArray& code)
+AssignTask::AssignTask(quint32 nodeIndex, const QByteArray& input, const QByteArray& code)
 {
     this->nodeIndex = nodeIndex;
     this->input = input;
@@ -36,27 +36,26 @@ AssignTask::AssignTask(quint8 nodeIndex, const QByteArray& input, const QByteArr
     type = Assign;
 }
 
-StartTask::StartTask(quint8 nodeIndex)
+StartTask::StartTask(quint32 nodeIndex)
 {
     this->nodeIndex = nodeIndex;
     type = Start;
 }
 
-StopTask::StopTask(quint8 nodeIndex) :
-    StartTask(nodeIndex)
+StopTask::StopTask(quint32 nodeIndex)
 {
     this->nodeIndex = nodeIndex;
     type = Stop;
 }
 
-KickTask::KickTask(quint8 nodeIndex) :
-    StartTask(nodeIndex)
+KickTask::KickTask(quint32 nodeIndex)
 {
+    this->nodeIndex = nodeIndex;
     type = Kick;
 }
 
-GetStatusTask::GetStatusTask(quint8 nodeIndex) :
-    StartTask(nodeIndex)
+GetStatusTask::GetStatusTask(quint32 nodeIndex)
 {
+    this->nodeIndex = nodeIndex;
     type = GetStatus;
 }

@@ -12,14 +12,15 @@ TARGET = owner
 TEMPLATE = app
 
 
-SOURCES += owner.cpp \
+SOURCES += \
     ui/mainwindow.cpp \
     ui/listenwindow.cpp \
     core/core.cpp \
     core/task.cpp \
     core/event.cpp \
     network/node.cpp \
-    ui/assignwindow.cpp
+    ui/assignwindow.cpp \
+    main.cpp
 
 HEADERS  += ui/mainwindow.h \
     ui/listenwindow.h \

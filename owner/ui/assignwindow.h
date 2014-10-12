@@ -17,9 +17,10 @@ public:
     explicit AssignWindow(QWidget* parent = nullptr, Qt::WindowFlags f = 0);
     ~AssignWindow();
     quint32 nodeId;
-    QByteArray nodeName;
-    QString nodeAddress, nodePython, filePath;
+    QString nodeName, nodeAddress, nodePython, filePath;
     QStringList nodeModules;
+    bool hadJob, inputChanged, codeChanged;
+    QString jobPath;
     QByteArray input, code;
 public slots:
     int exec();
@@ -28,11 +29,11 @@ public slots:
 private slots:
     void on_buttonLoadTask_clicked();
 
-    void on_buttonCancel_clicked();
-
-    void on_buttonAssignJob_clicked();
-
     void on_buttonRemoveJob_clicked();
+
+    void on_editInput_textChanged();
+
+    void on_editCode_textChanged();
 
 private:
     Ui::AssignWindow* ui;

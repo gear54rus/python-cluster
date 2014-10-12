@@ -63,7 +63,7 @@ signals:
     void taskFinished(Task* task);
     void malformedMessage(QString reason);
     void unexpectedMessage(QString reason);
-    void joinError(QString reason);
+    void joinError(QString address, QString reason);
     void joined();
     void left(QString reason);
     void statusChanged();

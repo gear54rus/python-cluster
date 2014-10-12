@@ -33,7 +33,15 @@ void Node::addTask(Task* task)
         }
         case Task::Assign: {
             auto t = static_cast<AssignTask*>(task);
-            stream << static_cast<quint8>(Job) << t->input << t->code;
+            stream << static_cast<quint8>(Job);
+            if(t->input.length())
+                stream << t->input;
+            else
+                stream << quint32(0);
+            if(t->code.length())
+                stream << t->code;
+            else
+                stream << quint32(0);
             break;
         }
         case Task::Start: {
@@ -60,7 +68,8 @@ void Node::kick()
     stream << static_cast<quint8>(Disconnect) << QByteArray("Kicked by owner");
     socket->write(message);
     socket->flush();
-    QObject::disconnect();
+    QObject::disconnect(socket, SIGNAL(disconnected()), nullptr, nullptr);
+    QObject::disconnect(socket, SIGNAL(readyRead()), nullptr, nullptr);
     socket->close();
 }
 
@@ -217,7 +226,7 @@ bool Node::processMessage()
                     } else {
                         QByteArray reason("Invalid join message");
                         stream << static_cast<quint8>(Reject) << reason;
-                        emit joinError(reason);
+                        emit joinError(socket->peerAddress().toString(), reason);
                         throw 0;
                     }
                     break;
@@ -284,8 +293,7 @@ bool Node::processMessage()
                             } else {
                                 QByteArray reason("Invalid job finished message");
                                 stream << static_cast<quint8>(Reject) << reason;
-                                emit joinError(reason);
-                                throw 0;
+                                emit unexpectedMessage(reason);
                             }
                             break;
                         }
@@ -296,7 +304,7 @@ bool Node::processMessage()
                     break;
                 }
             }
-        } catch(quint8 code) {
+        } catch(int code) {
             if(code) {
                 QByteArray reason(QString("Node sent \'%1\' while \'%2\'.").arg(typeText[this->message.type], statusText[status]).toLatin1());
                 stream << static_cast<quint8>(Reject) << reason;
@@ -310,7 +318,8 @@ bool Node::processMessage()
     this->message.reset();
     buffer.clear();
     if(!processFurther) {
-        QObject::disconnect();
+        QObject::disconnect(socket, SIGNAL(disconnected()), nullptr, nullptr);
+        QObject::disconnect(socket, SIGNAL(readyRead()), nullptr, nullptr);
         socket->close();
     }
     return processFurther;
