@@ -59,6 +59,7 @@ private:
     Core* core;
     QProcess runner;
     QStringList logTypes;
+    bool runningLocal, runningRemote;
     void log(LogType type, const QString& message);
 };
 

@@ -43,7 +43,6 @@ MainWindow::MainWindow(QWidget* parent) :
 int MainWindow::show()
 {
     QDir::setCurrent(QApplication::applicationDirPath());
-    QDir taskDir("tasks");
     QFile pythonBin("python/python.exe");
     if(!pythonBin.exists()) {
         QMessageBox::critical(this, "Error", "Python interpreter not found ('python/python.exe')!");
@@ -60,9 +59,16 @@ int MainWindow::show()
         QMessageBox::critical(this, "Error", "Unexpected output from Python interpreter!");
         return 1;
     }
-    log(Info, QString("Python version %1 found...").arg(match.captured(1)));
-    taskDir.removeRecursively();
-    taskDir.mkpath(".");
+    log(Info, QString("Python version %1 found.").arg(match.captured(1)));
+    QDir tasksDir("tasks");
+    tasksDir.removeRecursively();
+    tasksDir.mkpath(".");
+    QDir resultsDir("results");
+    if(!resultsDir.exists()) {
+        log(Info, "Created 'results' directory.");
+        resultsDir.mkpath(".");
+    } else
+        log(Info, "Found 'results' directory.");
     QWidget::show();
     log(Info, "Started!");
     return 0;
