@@ -57,6 +57,16 @@ class node:
         timestamp = int (timestamp * 1000)
         return timestamp
 
+    def changeStatus(self, newStatus):
+        #changing and reporting status if new status
+        if newStatus != self.status:
+            self.status = newStatus
+            self.connection.sendMessage('Status', statusenum[ self.status ])
+            return True
+        return False
+    def getStatus(self):
+        return self.status
+
     def run(self):
         var = 'true'
         while var:
@@ -70,9 +80,9 @@ class node:
                 if 'name' in msg:
                     self.name = msg['name']
                     print('NODE: my name is {0}'.format(self.name))
-                self.status = 'idle'
+                self.changeStatus('idle')
             if msg['type'] == 'Reject':
-                self.status = 'idle'
+                self.changeStatus('idle')
                 print(msg['reason'])
             if msg['type'] == 'Status':
                 self.connection.sendMessage('Status', statusenum[ self.status ] )
@@ -80,27 +90,30 @@ class node:
                 print('NODE: got message: {0}'.format(msg['type']))
                 if (len(msg['code']) == 0):
                     print('NODE: got task, but receives task message with code length of 0. Waiting for new task.')
-                    self.status = 'idle'
+                    self.changeStatus('idle')
                     self.deleteTaskFolder()
                     self.connection.sendMessage('Accept')
                     continue
-                if self.status == 'idle':
+                if self.getStatus() == 'ready to start':
+                    self.deleteTaskFolder()
+                    self.changeStatus('idle')
+                if self.getStatus() == 'idle':
                     self.parametrs = msg['parametrs']
                     self.code = msg['code']
                     self.codePath = self.createTask()
-                    self.status = 'ready to start'
+                    self.changeStatus('ready to start')
                     self.connection.sendMessage('Accept')
                 else:
                     self.connection.sendMessage('Reject','Node is busy. Node status: ' + self.status)
             if msg['type'] == 'Start':
-                if self.status == 'ready to start':
-                    self.status = 'working'
+                if self.getStatus() == 'ready to start':
+                    self.changeStatus('working')
                     self.connection.sendMessage('Start', longintToBEByteStr(self.getTimeUnix64()))
                     self.result = self.worker.run(self.codePath,self.name)
                     print(self.result)
                     self.connection.sendMessage('Finished', longintToBEByteStr(self.getTimeUnix64()) + ';'.encode() + self.result.encode())
                     self.deleteTaskFolder()
-                    self.status = 'idle'
+                    self.changeStatus('idle')
                     print('NODE: Has finished task, waiting new task')
                 else:
                     self.connection.sendMessage('Reject','Node is not ready to start. Node status: ' + self.status)
@@ -130,7 +143,7 @@ class node:
         return taskPath
 
     def saveTaskFile(self, name, data):
-        curDir = os.getcwd();
+        curDir = os.getcwd()
         os.chdir(self.getTaskPath())
         file = open(name, "wb")
         file.write(data)

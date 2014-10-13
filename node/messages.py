@@ -46,7 +46,7 @@ def createMessage(messTypeName, messData = ''):
     if messTypeName == 'Reject':
         result = bytes([messageTypes[messTypeName]]) + intToBEByteStr(len(messData)) + messData.encode('utf-8')
     if messTypeName == 'Status':
-        result = bytes([messageTypes[messTypeName]] )+ bytes( [messData] )
+        result = bytes([messageTypes[messTypeName]])+ bytes( [messData] )
     if messTypeName == 'Finished':
         result = bytes([messageTypes[messTypeName]]) + intToBEByteStr(len(messData)) + messData
     if messTypeName == 'Disconnect':
