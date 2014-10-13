@@ -61,7 +61,6 @@ class node:
         #changing and reporting status if new status
         if newStatus != self.status:
             self.status = newStatus
-            self.connection.sendMessage('Status', statusenum[ self.status ])
             return True
         return False
     def getStatus(self):
