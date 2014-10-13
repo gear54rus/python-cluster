@@ -53,8 +53,7 @@ class node:
        self.run()
 
     def getTimeUnix64(self):
-        timestamp = datetime.datetime.now()
-        timestamp = time.mktime(timestamp.timetuple())*1e3 + timestamp.microsecond/1e3
+        timestamp = time.time() # returns timestamp,[ms:3][micros:3]
         timestamp = int (timestamp * 1000)
         return timestamp
 
