@@ -80,7 +80,8 @@ class node:
                 if 'name' in msg:
                     self.name = msg['name']
                     print('NODE: my name is {0}'.format(self.name))
-                self.changeStatus('idle')
+                if self.getStatus() == 'disconnected':
+                    self.changeStatus('idle')
             if msg['type'] == 'Reject':
                 self.changeStatus('idle')
                 print(msg['reason'])
