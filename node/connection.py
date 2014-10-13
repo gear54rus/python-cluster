@@ -32,9 +32,9 @@ class connection:
                 return { 'type': 'Disconnect', 'reason': 'server has broken connection'}
         except:
             print ("Unexpected error: {0}".format( sys.exc_info()[0] ) )
-            return { 'type': 'Disconnect', 'reason': 'coz of error'}
-        if not buff: # empty socket
-            return buff
+            return { 'type': 'Disconnect', 'reason': 'exception: {0}'.format( sys.exc_info()[0] ) }
+        if not buff: # socket return null object
+            return { 'type': 'Disconnect', 'reason': 'coz of error. Maybe server closed conn'}
         # messages with only type are not processing later
         typeOfMessage = buff
         result = { 'type' : messages.messageTypes[self.byteToInt(typeOfMessage)]}
