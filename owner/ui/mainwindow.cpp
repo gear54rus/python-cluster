@@ -101,10 +101,10 @@ void MainWindow::taskFinished(Task* task)
             quint32 index =  t->nodeIndex;
             Node* node = nodes->at(index);
             if(t->getCode()) {
-                if(t->code.length())
+                if(t->codeBytes.length())
                     log(Error, QString("[%1] '%2' has rejected the job: %3!").arg(QSN(node->getId()), node->getName(), t->getMessage()));
             } else {
-                if(t->code.length())
+                if(t->codeBytes.length())
                     log(Info, QString("Task was successfully assigned to [%1] '%2'!").arg(QSN(node->getId()), QString(node->getName())));
                 else
                     log(Info, QString("Task was successfully removed from [%1] '%2'!").arg(QSN(node->getId()), QString(node->getName())));
@@ -257,16 +257,19 @@ void MainWindow::on_buttonAssign_clicked()
         assignWindow->hadJob = true;
         path.open(QFile::ReadOnly);
         assignWindow->jobPath = path.readAll();
+        path.close();
         code.open(QFile::ReadOnly);
         if(code.size() < MAX_EDITOR_DISPLAY_LENGTH)
             assignWindow->code = code.readAll();
         else
             assignWindow->code.clear();
+        code.close();
         input.open(QFile::ReadOnly);
         if(input.size() < MAX_EDITOR_DISPLAY_LENGTH)
             assignWindow->input = input.readAll();
         else
             assignWindow->input.clear();
+        input.close();
     }
     assignWindow->inputChanged = false;
     assignWindow->codeChanged = false;
@@ -282,9 +285,6 @@ void MainWindow::on_buttonAssign_clicked()
                 code.write(assignWindow->code);
                 log(Info, QString("Assigning '%1' to [%2] '%3'...").arg(assignWindow->jobPath, QSN(nodeId), nodeName));
             } else {
-                path.close();
-                input.close();
-                code.close();
                 taskDir.removeRecursively();
                 log(Info, QString("Removing task from [%1] '%2'...").arg(QSN(nodeId), nodeName));
             }

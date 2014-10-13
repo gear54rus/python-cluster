@@ -23,10 +23,12 @@ AssignWindow::~AssignWindow()
 
 int AssignWindow::exec()
 {
+    ui->buttonLoadTask->setFocus();
     ui->labelNodeID->setText(QSN(nodeId));
     ui->labelNodeName->setText(nodeName);
     ui->labelNodeIP->setText(nodeAddress);
     ui->labelNodeVer->setText(nodePython);
+    ui->listModules->clear();
     ui->listModules->addItems(nodeModules);
     QString tooLong("Text is too long to display here...");
     if(hadJob) {

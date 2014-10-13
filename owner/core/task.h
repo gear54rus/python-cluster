@@ -53,9 +53,9 @@ public:
 
 class AssignTask : public Task {
 public:
-    AssignTask(quint32 nodeIndex, const QByteArray& input, const QByteArray& code);
+    AssignTask(quint32 nodeIndex, const QByteArray& inputBytes, const QByteArray& codeBytes);
     quint32 nodeIndex;
-    QByteArray input, code;
+    QByteArray inputBytes, codeBytes;
 };
 
 class StartTask : public Task {

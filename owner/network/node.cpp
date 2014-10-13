@@ -34,12 +34,12 @@ void Node::addTask(Task* task)
         case Task::Assign: {
             auto t = static_cast<AssignTask*>(task);
             stream << static_cast<quint8>(Job);
-            if(t->input.length())
-                stream << t->input;
+            if(t->inputBytes.length())
+                stream << t->inputBytes;
             else
                 stream << quint32(0);
-            if(t->code.length())
-                stream << t->code;
+            if(t->codeBytes.length())
+                stream << t->codeBytes;
             else
                 stream << quint32(0);
             break;
@@ -276,12 +276,12 @@ bool Node::processMessage()
                                     t->finish(1, this->message.body);
                                 emit taskFinished(t);
                             } else if((index = taskIndex(Task::Assign)) != -1) {
-                                Task* t = tasks.takeAt(index);
+                                AssignTask* t = static_cast<AssignTask*>(tasks.takeAt(index));
                                 if(this->message.type == Accept) {
                                     t->finish(0);
-                                    status = Idle;
+                                    status = t->codeBytes.length() ? ReadyToStart : Idle;
                                 } else
-                                    t->finish(1, "Unable to remove job");
+                                    t->finish(1, t->codeBytes.length() ? "Unable to assign new job" : "Unable to remove job");
                                 emit taskFinished(t);
                             } else
                                 throw 1;
@@ -307,6 +307,7 @@ bool Node::processMessage()
                                 stream << static_cast<quint8>(Reject) << reason;
                                 emit unexpectedMessage(reason);
                             }
+                            status = Idle;
                             break;
                         }
                         default: {
@@ -318,7 +319,7 @@ bool Node::processMessage()
             }
         } catch(int code) {
             if(code) {
-                QByteArray reason(QString("Node sent \'%1\' while \'%2\'.").arg(typeText[this->message.type], statusText[status]).toLatin1());
+                QByteArray reason(QString("Node sent \'%1\' while \'%2\'").arg(typeText[this->message.type], statusText[status]).toLatin1());
                 stream << static_cast<quint8>(Reject) << reason;
                 emit unexpectedMessage(reason);
             } else

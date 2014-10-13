@@ -31,8 +31,8 @@ ListenTask::ListenTask(const QHostAddress& address, quint16 port)
 AssignTask::AssignTask(quint32 nodeIndex, const QByteArray& input, const QByteArray& code)
 {
     this->nodeIndex = nodeIndex;
-    this->input = input;
-    this->code = code;
+    this->inputBytes = input;
+    this->codeBytes = code;
     type = Assign;
 }
 
