@@ -274,7 +274,7 @@ void MainWindow::newEvent(Event* event)
             auto e = static_cast<JobFinishedEvent*>(event);
             Node* node = core->getNodeList()->at(e->index);
             QString dtFormat("dd-MM hh:mm:ss.zzz"),
-                    resultPath("results/" + QDateTime::fromMSecsSinceEpoch(remoteResultTimeStamp).toString("dd.MM.yyyy_HH-mm-ss.zzz") + "/");
+                    resultPath("results/" + QDateTime::fromMSecsSinceEpoch(remoteResultTimeStamp).toString("dd.MM.yyyy_HH-mm-ss.zzz") + "/" + QSN(node->getId()) + "/");
             ui->listNodes->item(e->index)->setText(QString("[%1] %2 (%3) - %4").arg(QSN(node->getId()), node->getName(), node->getAddress(), node->getStatus()));
             {
                 QDir(resultPath).mkpath(".");
@@ -372,7 +372,7 @@ void MainWindow::on_buttonAssign_clicked()
                 input.write(assignWindow->input);
                 code.open(QFile::WriteOnly | QFile::Truncate);
                 code.write(assignWindow->code);
-                log(Info, QString("Assigning '%1' to [%2] '%3'...").arg(assignWindow->jobPath, QSN(nodeId), nodeName));
+                log(Info, QString("Assigning '%1' to [%2] '%3'...").arg(QDir::toNativeSeparators(assignWindow->jobPath) , QSN(nodeId), nodeName));
             } else {
                 taskDir.removeRecursively();
                 log(Info, QString("Removing task from [%1] '%2'...").arg(QSN(nodeId), nodeName));
@@ -413,6 +413,7 @@ void MainWindow::on_buttonStartRemote_clicked()
             emit newTask(new StartTask(i));
         }
     }
+    runningRemote = true;
 }
 
 void MainWindow::on_buttonStartLocal_clicked()
