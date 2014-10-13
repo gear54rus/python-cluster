@@ -4,6 +4,7 @@ import io
 
 class worker:
     """description of class"""
+    result = False
     def run(self, pathToAlgDir, name):
         curDir = os.getcwd()
         tempStdOut = sys.stdout
@@ -14,6 +15,4 @@ class worker:
         exec(open(algName).read())
         os.chdir(curDir)
         sys.stdout = tempStdOut
-        log = myStdOut.getvalue()
-        return log
-
+        self.result = myStdOut.getvalue()

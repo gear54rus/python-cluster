@@ -3,17 +3,20 @@ import messages
 import sys
 import struct
 
+
+SOCKET_TIMEOUT = 1
+
 class connection:
     def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.settimeout(SOCKET_TIMEOUT)
         self.lastMessageSend = 'none'
     def connect(self, ip, port):
         try:
             self.conn = self.sock.connect( (ip, port) )
         except OSError as e:
-            if e.winerror == 10061:
-                print('can not connect to server')
-                return False
+            print('can not connect to server')
+            return False
         return True
     def readSocket(self, count):
         buff = self.sock.recv(count)
@@ -26,6 +29,8 @@ class connection:
     def checkSocket(self):
         try:
             buff = self.sock.recv(1)
+        except socket.timeout as e:
+                raise e
         except Exception as e:
             #10054 - host reset connection
             if e.errno == 10054:
