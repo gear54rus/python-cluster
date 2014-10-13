@@ -106,6 +106,8 @@ void Node::readyRead()
                     case Start: {
                         message.length = sizeof(quint64);
                         message.toParse = Message::MessagePart::Body;
+                        if(socket->bytesAvailable())
+                            readyRead();
                         break;
                     }
                     default: {

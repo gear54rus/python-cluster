@@ -130,7 +130,7 @@ void Core::nodeStatusChanged()
 
 void Core::nodeJobFinished(QByteArray output)
 {
-    emit JobFinishedEvent(nodes.indexOf(static_cast<Node*>(QObject::sender())), output);
+    emit newEvent(new JobFinishedEvent(nodes.indexOf(static_cast<Node*>(QObject::sender())), output));
 }
 
 void Core::listen(ListenTask* task)
