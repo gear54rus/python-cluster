@@ -47,6 +47,8 @@ private slots:
 
     void on_buttonStartLocal_clicked();
 
+    void on_buttonStopAll_clicked();
+
 private:
     enum LogType {
         Info = 0,
@@ -60,6 +62,7 @@ private:
     QProcess runner;
     QStringList logTypes;
     bool runningLocal, runningRemote;
+    quint64 localResultTimeStamp, remoteResultTimeStamp;
     void log(LogType type, const QString& message);
 };
 

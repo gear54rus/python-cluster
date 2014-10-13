@@ -54,8 +54,14 @@ public:
     inline QString getStatus() const {
         return statusText[status];
     }
-    inline bool getReadyToStart() const {
+    inline bool isReadyToStart() const {
         return status == ReadyToStart;
+    }
+    inline bool isWorking() const {
+        return status == Working;
+    }
+    inline bool isAcceptingTasks() const {
+        return status != Working;
     }
 
     void addTask(Task* task);

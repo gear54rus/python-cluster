@@ -82,6 +82,10 @@ void AssignWindow::on_buttonLoadTask_clicked()
     if(jobPath.isEmpty())
         return;
     QFile code(jobPath), input(jobPath + ".input");
+    if((code.size() + input.size() + sizeof(quint32) * 2) > MAX_MESSAGE_LENGTH) {
+        QMessageBox::warning(this, "File error!", QString("File(s) are too big. Code an input files together should not be bigger than 256MB.").arg(jobPath));
+        return;
+    }
     if(code.open(QFile::ReadOnly)) {
         if(code.size()) {
             this->code = code.readAll();
