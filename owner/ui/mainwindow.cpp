@@ -64,6 +64,7 @@ int MainWindow::show()
         QMessageBox::critical(this, "Error", "Python interpreter did not respond in time!");
         return 1;
     }
+    QObject::connect(&runner, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processFinished(int,QProcess::ExitStatus)));
     QRegularExpressionMatch match = QRegularExpression("Python (\\d+\\.\\d+\\.\\d+)\\r\\n").match(runner.readAll());
     if(!match.hasMatch()) {
         QMessageBox::critical(this, "Error", "Unexpected output from Python interpreter!");
@@ -188,6 +189,12 @@ void MainWindow::taskFinished(Task* task)
     }
     delete task;
 }
+
+void MainWindow::processFinished(int code, QProcess::ExitStatus status) {
+    if (runningLocal) {
+    }
+}
+
 void MainWindow::newEvent(Event* event)
 {
     switch(event->getType()) {
