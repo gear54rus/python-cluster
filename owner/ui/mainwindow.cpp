@@ -9,6 +9,7 @@
 #include <QMessageBox>
 #include <QRegularExpression>
 #include <QRegularExpressionMatch>
+#include <QScrollBar>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -19,7 +20,9 @@ MainWindow::MainWindow(QWidget* parent) :
     listenWindow(new ListenWindow(this, Qt::CustomizeWindowHint | Qt::MSWindowsFixedSizeDialogHint | Qt::WindowTitleHint | Qt::WindowCloseButtonHint)),
     assignWindow(new AssignWindow(this, Qt::CustomizeWindowHint | Qt::WindowTitleHint | Qt::WindowMaximizeButtonHint | Qt::WindowCloseButtonHint)),
     core(new Core()),
-    logTypes(QStringList("MSG") << "WARN" << "ERROR")
+    logTypes(QStringList("MSG") << "WARN" << "ERROR"),
+    runningRemote(false),
+    runningLocal(0)
 {
     ui->setupUi(this);
     log(Info, "Initializing...");
@@ -162,7 +165,7 @@ void MainWindow::taskFinished(Task* task)
                 ui->listNodes->item(index)->setText(QString("[%1] %2 (%3) - %4").arg(QSN(node->getId()), node->getName(), node->getAddress(), node->getStatus()));
             } else {
                 log(Info, QString("[%1] '%2' was kicked from the cluster.").arg(QSN(t->nodeId), QString(t->nodeName)));
-                nodeLeft(t->nodeId, index);
+                nodeLeft(index, t->nodeId);
             }
             break;
         }
@@ -204,6 +207,8 @@ void MainWindow::newEvent(Event* event)
             Node* node = core->getNodeList()->at(e->index);
             ui->listNodes->addItem(QString("[%1] %2 (%3) - %4").arg(QSN(node->getId()), node->getName(), node->getAddress(), node->getStatus()));
             log(Info, QString("'%1' (%2) has joined the cluster with ID: %3.").arg(node->getName(), node->getAddress(), QSN(node->getId())));
+            ui->buttonKickAll->setEnabled(true);
+            ui->buttonStatusAll->setEnabled(true);
             break;
         }
         case Event::NodeLeft: {
@@ -256,13 +261,30 @@ void MainWindow::on_buttonListen_clicked()
 
 void MainWindow::log(LogType type, const QString& message)
 {
+    QScrollBar* bar = ui->editLog->verticalScrollBar();
+    bool scroll = (bar->maximum() == bar->value());
     ui->editLog->appendPlainText(QString("%1 [%2] %3").arg(QDateTime::currentDateTime().toString("dd-MM-yyyy hh:mm:ss.zzz"), logTypes[type], message));
+    if(scroll)
+        ui->editLog->ensureCursorVisible();
+}
+
+void MainWindow::logHtml(LogType type, const QString& message)
+{
+    QScrollBar* bar = ui->editLog->verticalScrollBar();
+    bool scroll = (bar->maximum() == bar->value());
+    ui->editLog->appendHtml(QString("%1 [%2] %3").arg(QDateTime::currentDateTime().toString("dd-MM-yyyy hh:mm:ss.zzz"), logTypes[type], message));
+    if(scroll)
+        ui->editLog->ensureCursorVisible();
 }
 
 void MainWindow::nodeLeft(quint32 index, quint32 id)
 {
     delete ui->listNodes->takeItem(index);
     QDir("jobs/" + QSN(id)).removeRecursively();
+    if(!core->getNodeList()->size()) {
+        ui->buttonKickAll->setEnabled(false);
+        ui->buttonStatusAll->setEnabled(false);
+    }
 }
 
 void MainWindow::on_listNodes_currentRowChanged(int currentRow)
@@ -369,6 +391,7 @@ void MainWindow::on_buttonStartRemote_clicked()
 
 void MainWindow::on_buttonStartLocal_clicked()
 {
+    runningLocal = true;
 }
 
 void MainWindow::on_buttonStopAll_clicked()
@@ -377,9 +400,9 @@ void MainWindow::on_buttonStopAll_clicked()
     Node* node;
     for(qint32 i = 0; i < nodes->length(); i++) {
         node = nodes->at(i);
-        if (node->isWorking()) {
-        log(Info, QString("Stopping remote task on [%2] '%3'...").arg(QSN(node->getId()), QString(node->getName())));
-        emit newTask(new StopTask(i));
+        if(node->isWorking()) {
+            log(Info, QString("Stopping remote task on [%2] '%3'...").arg(QSN(node->getId()), QString(node->getName())));
+            emit newTask(new StopTask(i));
         }
     }
     runningLocal = false;
@@ -392,18 +415,20 @@ void MainWindow::on_buttonStatusAll_clicked()
     Node* node;
     for(qint32 i = 0; i < nodes->length(); i++) {
         node = nodes->at(i);
-        log(Info, QString("Kicking [%2] '%3'...").arg(QSN(node->getId()), QString(node->getName())));
-        emit newTask(new KickTask(i));
+        log(Info, QString("Checking status of [%2] '%3'...").arg(QSN(node->getId()), QString(node->getName())));
+        emit newTask(new GetStatusTask(i));
     }
 }
 
 void MainWindow::on_buttonKickAll_clicked()
 {
     auto nodes = core->getNodeList();
+    int length = nodes->length();
     Node* node;
-    for(qint32 i = 0; i < nodes->length(); i++) {
-        node = nodes->at(i);
-        log(Info, QString("Checking status of [%2] '%3'...").arg(QSN(node->getId()), QString(node->getName())));
-        emit newTask(new GetStatusTask(i));
+    for(qint32 i = 0; i < length; i++) {
+        node = nodes->at(0);
+        log(Info, QString("Kicking [%2] '%3'...").arg(QSN(node->getId()), QString(node->getName())));
     }
+    while(length--)
+        emit newTask(new KickTask(0));
 }

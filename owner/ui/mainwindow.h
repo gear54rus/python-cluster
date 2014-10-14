@@ -64,9 +64,11 @@ private:
     Core* core;
     QProcess runner;
     QStringList logTypes;
-    bool runningLocal, runningRemote;
+    bool runningRemote;
+    quint32 runningLocal;
     quint64 localResultTimeStamp, remoteResultTimeStamp;
     void log(LogType type, const QString& message);
+    void logHtml(LogType type, const QString& message);
     void nodeLeft(quint32 index, quint32 id);
 };
 
