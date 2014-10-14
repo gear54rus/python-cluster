@@ -1,22 +1,18 @@
 import connection
 import worker
-import messages
 import sys
-import datetime
 import os
 import time
 import shutil
 import struct
-import socket
 import threading
 
 statusenum = {
-0x1: 'idle',
-0x2: 'ready to start',
-0x3: 'working',
-0x4: 'disconnected',
-
-'idle': 0x1,
+0x1 : 'idle',
+0x2 : 'ready to start',
+0x3 : 'working',
+0x4 : 'disconnected',
+'idle' : 0x1,
 'ready to start': 0x2,
 'working': 0x3,
 'disconnected': 0x4
@@ -28,13 +24,12 @@ def longintToBEByteStr(number):
 
 def getModulesList():
         import subprocess
-        import re
         proc = subprocess.Popen(["python", "-c", "help('modules')"], stdout=subprocess.PIPE)
-        out = proc.communicate()[0]  #Тут список модулей через пробел
+        out = proc.communicate()[0]  #all modules divided by spaces
         out = out[76:len(out) - 158].decode("utf-8") #Cut trash
         out = out.replace('_', '')
-        modulesArray = out.split()   #Тут массив с модулями
-        modulesList = ','.join(modulesArray) #Тут модули через запятую
+        modulesArray = out.split()
+        modulesList = ','.join(modulesArray) #modules divided by ,
         modulesList = modulesList
         return modulesList
 
@@ -45,7 +40,7 @@ class node:
        self.connection = connection.connection()
        if not self.connection.connect(ip, port):
            return
-       cur_version = '{0}.{1}.{2};'.format(sys.version_info[0],sys.version_info[1],sys.version_info[2]) + getModulesList()
+       cur_version = '{0}.{1}.{2};'.format(sys.version_info[0], sys.version_info[1], sys.version_info[2]) + getModulesList()
        self.connection.sendMessage('Join', cur_version)
        self.status = 'disconnected'
        self.codePath = ''
@@ -56,17 +51,20 @@ class node:
 
     def getTimeUnix64(self):
         timestamp = time.time() # returns timestamp,[ms:3][micros:3]
-        timestamp = int (timestamp * 1000)
+        timestamp = int(timestamp * 1000)
         return timestamp
 
     def changeStatus(self, newStatus):
-        #changing and reporting status if new status
+        #changing status if new status
         if newStatus != self.status:
             self.status = newStatus
             return True
         return False
     def getStatus(self):
         return self.status
+
+    def stopWorkerTread(self):
+        return True
 
     def run(self):
         var = 'true'
@@ -79,12 +77,13 @@ class node:
                 print('NODE: Has finished task, waiting new task')
             try:
                 msg = self.connection.checkSocket()
-            except Exception as e:
+            except Exception:
+                #dirty code
                 continue
             if not msg:
                 continue
             if msg['type'] != 'Task':
-                #imaged that 256MB printed in stdout 
+                #task maybe very huge and not readable
                 print('NODE: got message: {0}'.format(msg))
             if msg['type'] == 'Accept':
                 if 'name' in msg:
@@ -99,7 +98,7 @@ class node:
                 self.connection.sendMessage('Status', statusenum[self.status])
             if msg['type'] == 'Task':
                 print('NODE: got message: {0}'.format(msg['type']))
-                if (len(msg['code']) == 0):
+                if len(msg['code']) == 0:
                     print('NODE: got task, but receives task message with code length of 0. Waiting for new task.')
                     self.changeStatus('idle')
                     self.deleteTaskFolder()
@@ -115,24 +114,28 @@ class node:
                     self.changeStatus('ready to start')
                     self.connection.sendMessage('Accept')
                 else:
-                    self.connection.sendMessage('Reject','Node is busy. Node status: ' + self.status)
+                    self.connection.sendMessage('Reject', 'Node is busy. Node status: ' + self.status)
             if msg['type'] == 'Start':
                 if self.getStatus() == 'ready to start':
                     self.changeStatus('working')
                     self.connection.sendMessage('Start', longintToBEByteStr(self.getTimeUnix64()))
-                    self.t = threading.Thread(target=self.worker.run, args = (self.codePath,self.name))
-                    self.t.start()
+                    self.workerThread = threading.Thread(target=self.worker.run, args = (self.codePath,self.name))
+                    self.workerThread.start()
                 else:
                     self.connection.sendMessage('Reject', 'Node is not ready to start. Node status: ' + self.status)
             if msg['type'] == 'Disconnect':
                 self.status = 'disconnected'
                 print('Server disconnected. Reason: ' + msg['reason'])
+                if self.status == 'working':
+                    self.stopWorkerTread()
                 return 1
-
+            if msg['type'] == 'Stop' and self.status == 'working':
+                self.stopWorkerTread()
+                self.changeStatus('ready to start')
         return 1
 
-    def disconnect(self,reason):
-        self.connection.sendMessage('Disconnect',reason)
+    def disconnect(self, reason):
+        self.connection.sendMessage('Disconnect', reason)
         return 1
 
 
@@ -145,7 +148,7 @@ class node:
         return self.getTaskPath()
 
     def getTaskPath(self):
-        curDir = os.getcwd();
+        curDir = os.getcwd()
         taskPath = curDir + '\\' + self.getTaskFullName()
         return taskPath
 
@@ -159,9 +162,6 @@ class node:
         return True
 
     def createTask(self):
-        code = self.code
-        parametrs = self.parametrs
-        algName = 'alg.py'
         taskPath = self.createTaskFolder()
         self.saveTaskFile('alg.py', self.code)
         self.saveTaskFile('input', self.parametrs)
