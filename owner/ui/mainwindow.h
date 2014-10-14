@@ -42,13 +42,15 @@ private slots:
 
     void on_buttonKick_clicked();
 
-    void on_listNodes_itemDoubleClicked();
-
     void on_buttonStartRemote_clicked();
 
     void on_buttonStartLocal_clicked();
 
     void on_buttonStopAll_clicked();
+
+    void on_buttonStatusAll_clicked();
+
+    void on_buttonKickAll_clicked();
 
 private:
     enum LogType {
@@ -65,6 +67,7 @@ private:
     bool runningLocal, runningRemote;
     quint64 localResultTimeStamp, remoteResultTimeStamp;
     void log(LogType type, const QString& message);
+    void nodeLeft(quint32 index, quint32 id);
 };
 
 #endif // MAINWINDOW_H

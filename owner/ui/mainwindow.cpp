@@ -26,6 +26,7 @@ MainWindow::MainWindow(QWidget* parent) :
     QObject::connect(this, SIGNAL(newTask(Task*)), core, SLOT(newTask(Task*)));
     QObject::connect(core, SIGNAL(taskFinished(Task*)), this, SLOT(taskFinished(Task*)));
     QObject::connect(core, SIGNAL(newEvent(Event*)), this, SLOT(newEvent(Event*)));
+    QObject::connect(ui->listNodes, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(on_buttonAssign_clicked()));
     QDir::setCurrent(QApplication::applicationDirPath());
     {
         QStringList* l = new QStringList();
@@ -64,7 +65,7 @@ int MainWindow::show()
         QMessageBox::critical(this, "Error", "Python interpreter did not respond in time!");
         return 1;
     }
-    QObject::connect(&runner, SIGNAL(finished(int,QProcess::ExitStatus)), this, SLOT(processFinished(int,QProcess::ExitStatus)));
+    QObject::connect(&runner, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(processFinished(int, QProcess::ExitStatus)));
     QRegularExpressionMatch match = QRegularExpression("Python (\\d+\\.\\d+\\.\\d+)\\r\\n").match(runner.readAll());
     if(!match.hasMatch()) {
         QMessageBox::critical(this, "Error", "Unexpected output from Python interpreter!");
@@ -161,25 +162,7 @@ void MainWindow::taskFinished(Task* task)
                 ui->listNodes->item(index)->setText(QString("[%1] %2 (%3) - %4").arg(QSN(node->getId()), node->getName(), node->getAddress(), node->getStatus()));
             } else {
                 log(Info, QString("[%1] '%2' was kicked from the cluster.").arg(QSN(t->nodeId), QString(t->nodeName)));
-                delete ui->listNodes->takeItem(index);
-            }
-            if(!nodes->size()) {
-                ui->buttonKickAll->setEnabled(false);
-                ui->buttonStatusAll->setEnabled(false);
-            }
-            {
-                bool found = false;
-                for(qint32 i = 0; i < nodes->length(); i++) {
-                    if(nodes->at(i)) {
-                        found = true;
-                        break;
-                    }
-                }
-                if(!found) {
-                    ui->buttonStartRemote->setText("Start remote");
-                    ui->buttonStartRemote->setEnabled(false);
-                    runningRemote = false;
-                }
+                nodeLeft(t->nodeId, index);
             }
             break;
         }
@@ -190,8 +173,9 @@ void MainWindow::taskFinished(Task* task)
     delete task;
 }
 
-void MainWindow::processFinished(int code, QProcess::ExitStatus status) {
-    if (runningLocal) {
+void MainWindow::processFinished(int code, QProcess::ExitStatus status)
+{
+    if(runningLocal) {
     }
 }
 
@@ -206,28 +190,8 @@ void MainWindow::newEvent(Event* event)
         }
         case Event::MalformedMessage: {
             auto e = static_cast<MalformedMessageEvent*>(event);
-            auto nodes = core->getNodeList();
-            delete ui->listNodes->takeItem(e->index);
-            QDir("jobs/" + QSN(e->id)).removeRecursively();
+            nodeLeft(e->index, e->id);
             log(Warning, QString("Received malformed message from [%1] '%2': %3! Node was kicked!").arg(QSN(e->id), e->name, e->reason));
-            if(!nodes->size()) {
-                ui->buttonKickAll->setEnabled(false);
-                ui->buttonStatusAll->setEnabled(false);
-            }
-            {
-                bool found = false;
-                for(qint32 i = 0; i < nodes->length(); i++) {
-                    if(nodes->at(i)) {
-                        found = true;
-                        break;
-                    }
-                }
-                if(!found) {
-                    ui->buttonStartRemote->setText("Start remote");
-                    ui->buttonStartRemote->setEnabled(false);
-                    runningRemote = false;
-                }
-            }
             break;
         }
         case Event::JoinError: {
@@ -240,34 +204,12 @@ void MainWindow::newEvent(Event* event)
             Node* node = core->getNodeList()->at(e->index);
             ui->listNodes->addItem(QString("[%1] %2 (%3) - %4").arg(QSN(node->getId()), node->getName(), node->getAddress(), node->getStatus()));
             log(Info, QString("'%1' (%2) has joined the cluster with ID: %3.").arg(node->getName(), node->getAddress(), QSN(node->getId())));
-            ui->buttonKickAll->setEnabled(true);
-            ui->buttonStatusAll->setEnabled(true);
             break;
         }
         case Event::NodeLeft: {
             auto e = static_cast<NodeLeftEvent*>(event);
-            auto nodes = core->getNodeList();
-            delete ui->listNodes->takeItem(e->index);
-            QDir("jobs/" + QSN(e->id)).removeRecursively();
+            nodeLeft(e->index, e->id);
             log(Info, QString("[%1] '%2' has left the cluster: %3.").arg(QSN(e->id), e->name, e->leaveDesctiption));
-            if(!nodes->size()) {
-                ui->buttonKickAll->setEnabled(false);
-                ui->buttonStatusAll->setEnabled(false);
-            }
-            {
-                bool found = false;
-                for(qint32 i = 0; i < nodes->length(); i++) {
-                    if(nodes->at(i)) {
-                        found = true;
-                        break;
-                    }
-                }
-                if(!found) {
-                    ui->buttonStartRemote->setText("Start remote");
-                    ui->buttonStartRemote->setEnabled(false);
-                    runningRemote = false;
-                }
-            }
             break;
         }
         case Event::NodeStatusChanged: {
@@ -316,6 +258,13 @@ void MainWindow::log(LogType type, const QString& message)
 {
     ui->editLog->appendPlainText(QString("%1 [%2] %3").arg(QDateTime::currentDateTime().toString("dd-MM-yyyy hh:mm:ss.zzz"), logTypes[type], message));
 }
+
+void MainWindow::nodeLeft(quint32 index, quint32 id)
+{
+    delete ui->listNodes->takeItem(index);
+    QDir("jobs/" + QSN(id)).removeRecursively();
+}
+
 void MainWindow::on_listNodes_currentRowChanged(int currentRow)
 {
     if(currentRow == -1) {
@@ -323,9 +272,8 @@ void MainWindow::on_listNodes_currentRowChanged(int currentRow)
         ui->buttonStatus->setEnabled(false);
         ui->buttonKick->setEnabled(false);
     } else {
-        auto nodes = core->getNodeList();
-        Node* node = nodes->at(currentRow);
-        ui->buttonAssign->setEnabled(node->isAcceptingTasks() ? true : false);
+        if(!runningLocal && !runningRemote)
+            ui->buttonAssign->setEnabled(true);
         ui->buttonStatus->setEnabled(true);
         ui->buttonKick->setEnabled(true);
     }
@@ -403,10 +351,6 @@ void MainWindow::on_buttonKick_clicked()
     log(Info, QString("Kicking [%2] '%3'...").arg(QSN(node->getId()), QString(node->getName())));
     emit newTask(new KickTask(index));
 }
-void MainWindow::on_listNodes_itemDoubleClicked()
-{
-    on_buttonAssign_clicked();
-}
 
 void MainWindow::on_buttonStartRemote_clicked()
 {
@@ -429,4 +373,37 @@ void MainWindow::on_buttonStartLocal_clicked()
 
 void MainWindow::on_buttonStopAll_clicked()
 {
+    auto nodes = core->getNodeList();
+    Node* node;
+    for(qint32 i = 0; i < nodes->length(); i++) {
+        node = nodes->at(i);
+        if (node->isWorking()) {
+        log(Info, QString("Stopping remote task on [%2] '%3'...").arg(QSN(node->getId()), QString(node->getName())));
+        emit newTask(new StopTask(i));
+        }
+    }
+    runningLocal = false;
+    runningRemote = false;
+}
+
+void MainWindow::on_buttonStatusAll_clicked()
+{
+    auto nodes = core->getNodeList();
+    Node* node;
+    for(qint32 i = 0; i < nodes->length(); i++) {
+        node = nodes->at(i);
+        log(Info, QString("Kicking [%2] '%3'...").arg(QSN(node->getId()), QString(node->getName())));
+        emit newTask(new KickTask(i));
+    }
+}
+
+void MainWindow::on_buttonKickAll_clicked()
+{
+    auto nodes = core->getNodeList();
+    Node* node;
+    for(qint32 i = 0; i < nodes->length(); i++) {
+        node = nodes->at(i);
+        log(Info, QString("Checking status of [%2] '%3'...").arg(QSN(node->getId()), QString(node->getName())));
+        emit newTask(new GetStatusTask(i));
+    }
 }
