@@ -10,6 +10,8 @@
 #include <QRegularExpression>
 #include <QRegularExpressionMatch>
 #include <QScrollBar>
+#include <QUrl>
+#include <QDesktopServices>
 
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
@@ -241,7 +243,7 @@ void MainWindow::newEvent(Event* event)
                 input.copy(resultPath + "input");
                 output.write(e->output);
             }
-            log(Info, QString("[%1] '%2' has finished the job at: %3 (remote), %4 (local)! Result folder is '%5'.").arg(QSN(node->getId()), QString(node->getName()), QDateTime::fromMSecsSinceEpoch(node->jobFinishedAt).toString(dtFormat), QDateTime::fromMSecsSinceEpoch(node->jobFinishedAtLocal).toString(dtFormat), resultPath));
+            logHtml(Info, QString("[%1] '%2' has finished the job at: %3 (remote), %4 (local)! Result folder is <a href=\"file:///C:/\">aaaa</a> '%5'.").arg(QSN(node->getId()), QString(node->getName()), QDateTime::fromMSecsSinceEpoch(node->jobFinishedAt).toString(dtFormat), QDateTime::fromMSecsSinceEpoch(node->jobFinishedAtLocal).toString(dtFormat), resultPath));
             break;
         }
         default: {
@@ -285,6 +287,11 @@ void MainWindow::nodeLeft(quint32 index, quint32 id)
         ui->buttonKickAll->setEnabled(false);
         ui->buttonStatusAll->setEnabled(false);
     }
+}
+
+void MainWindow::runLocalJob(quint32 id)
+{
+    QDir jobDir("jobs/" + QSN(id));
 }
 
 void MainWindow::on_listNodes_currentRowChanged(int currentRow)
@@ -377,12 +384,16 @@ void MainWindow::on_buttonKick_clicked()
 void MainWindow::on_buttonStartRemote_clicked()
 {
     remoteResultTimeStamp = QDateTime::currentMSecsSinceEpoch();
+    if(!runningLocal)
+        runLocal.clear();
     auto nodes = core->getNodeList();
     Node* node;
     for(qint32 i = 0; i < nodes->length(); i++) {
         node = nodes->at(i);
         if(node->isReadyToStart()) {
             log(Info, QString("Starting remote task on [%1] \'%2\'...").arg(QSN(node->getId()), QString(node->getName())));
+            if(!runningLocal)
+                runLocal.append(node->getId());
             emit newTask(new StartTask(i));
         }
     }
@@ -391,6 +402,8 @@ void MainWindow::on_buttonStartRemote_clicked()
 
 void MainWindow::on_buttonStartLocal_clicked()
 {
+//    if (runningRemote)
+//    else
     runningLocal = true;
 }
 
