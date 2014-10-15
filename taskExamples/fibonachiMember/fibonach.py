@@ -1,6 +1,4 @@
 import sys
-sys.stdout = open('log', 'w')
-sys.stderr = sys.stdout
 
 class fibonachiNumbers:
 	def __init__(self, number):
@@ -20,12 +18,10 @@ import time
 
 start_time = time.time()
 
-number = 1000000
+number = 100000
 fnumber = fibonachiNumbers(number).get()
 
 elapsed_time = time.time() - start_time
 
 print('{0} number of fibonachi is {1}'.format(number, fnumber))
 print('elapsed time {0}'.format(elapsed_time))
-
-sys.stdout.close()

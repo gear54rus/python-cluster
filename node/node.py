@@ -8,11 +8,11 @@ import struct
 import threading
 
 statusenum = {
-0x1 : 'idle',
-0x2 : 'ready to start',
-0x3 : 'working',
-0x4 : 'disconnected',
-'idle' : 0x1,
+0x1: 'idle',
+0x2: 'ready to start',
+0x3: 'working',
+0x4: 'disconnected',
+'idle': 0x1,
 'ready to start': 0x2,
 'working': 0x3,
 'disconnected': 0x4
@@ -36,7 +36,7 @@ def getModulesList():
 
 class node:
 
-    def __init__(self,ip,port):
+    def __init__(self,ip,port, pythonPath):
        self.connection = connection.connection()
        if not self.connection.connect(ip, port):
            return
@@ -46,7 +46,7 @@ class node:
        self.codePath = ''
        self.result = ''
        self.name = 'defaultNodeName'
-       self.worker = worker.worker()
+       self.worker = worker.worker(pythonPath)
        self.run()
 
     def getTimeUnix64(self):
@@ -69,12 +69,14 @@ class node:
     def run(self):
         var = 'true'
         while var:
-            if (self.getStatus() == 'working') and self.worker.result:
-                self.connection.sendMessage('Finished', longintToBEByteStr(self.getTimeUnix64()) + ';'.encode() + self.worker.result.encode())
-                self.deleteTaskFolder()
-                self.changeStatus('idle')
-                self.worker.result = False
-                print('NODE: Has finished task, waiting new task')
+            if (self.getStatus() == 'working') and self.worker.pid != 'none':
+                if self.worker.result:
+                    self.connection.sendMessage('Finished', longintToBEByteStr(self.getTimeUnix64()) + ';'.encode() + self.worker.result)
+                    self.deleteTaskFolder()
+                    self.changeStatus('idle')
+                    self.worker.result = False
+                    self.worker.pid = 'none'
+                    print('NODE: Has finished task, waiting new task')
             try:
                 msg = self.connection.checkSocket()
             except Exception:
@@ -119,8 +121,9 @@ class node:
                 if self.getStatus() == 'ready to start':
                     self.changeStatus('working')
                     self.connection.sendMessage('Start', longintToBEByteStr(self.getTimeUnix64()))
-                    self.workerThread = threading.Thread(target=self.worker.run, args = (self.codePath,self.name))
-                    self.workerThread.start()
+                    self.worker.run(self.codePath)
+                    #self.workerThread = threading.Thread(target=self.worker.run, args = (self.codePath))
+                    #self.workerThread.start()
                 else:
                     self.connection.sendMessage('Reject', 'Node is not ready to start. Node status: ' + self.status)
             if msg['type'] == 'Disconnect':
@@ -130,7 +133,7 @@ class node:
                     self.stopWorkerTread()
                 return 1
             if msg['type'] == 'Stop' and self.status == 'working':
-                self.stopWorkerTread()
+                self.worker.stop()
                 self.changeStatus('ready to start')
         return 1
 
