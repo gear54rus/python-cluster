@@ -69,14 +69,12 @@ class node:
     def run(self):
         var = 'true'
         while var:
-            if (self.getStatus() == 'working') and self.worker.pid != 'none':
-                if self.worker.result:
-                    self.connection.sendMessage('Finished', longintToBEByteStr(self.getTimeUnix64()) + ';'.encode() + self.worker.result)
-                    self.deleteTaskFolder()
-                    self.changeStatus('idle')
-                    self.worker.result = False
-                    self.worker.pid = 'none'
-                    print('NODE: Has finished task, waiting new task')
+            if (self.getStatus() == 'working') and self.worker.isFinished():
+                self.connection.sendMessage('Finished', longintToBEByteStr(self.getTimeUnix64()) + ';'.encode() + self.worker.result)
+                self.deleteTaskFolder()
+                self.changeStatus('idle')
+                self.worker.clear()
+                print('NODE: Has finished task, waiting new task')
             try:
                 msg = self.connection.checkSocket()
             except Exception:
@@ -122,8 +120,6 @@ class node:
                     self.changeStatus('working')
                     self.connection.sendMessage('Start', longintToBEByteStr(self.getTimeUnix64()))
                     self.worker.run(self.codePath)
-                    #self.workerThread = threading.Thread(target=self.worker.run, args = (self.codePath))
-                    #self.workerThread.start()
                 else:
                     self.connection.sendMessage('Reject', 'Node is not ready to start. Node status: ' + self.status)
             if msg['type'] == 'Disconnect':
@@ -135,6 +131,7 @@ class node:
             if msg['type'] == 'Stop' and self.status == 'working':
                 self.worker.stop()
                 self.changeStatus('ready to start')
+                self.connection.sendMessage('Accept')
         return 1
 
     def disconnect(self, reason):

@@ -1,37 +1,34 @@
-﻿import os
-import sys
-import io
-import psutil
-import subprocess
-from subprocess import Popen, PIPE
+﻿import subprocess
 import threading
 
 class worker:
     """description of class"""
+    result = False
+    proc = 'none'
+    subprocthread = 'none'
     def __init__(self, pythonPath):
         self.pathToPython = pythonPath
-    result = False
-    pid = 'none'
+        self.clear()
+    def clear(self):
+        self.proc = 'none'
+        self.result = False
+        self.subprocthread = 'none'
     def isFinished(self):
-        process = psutil.Process(self.pid)
-        if process.is_running():
-            return False
-        return True
+        if self.result:
+            return True
+        return False
     def stop(self):
-        process = psutil.Process(self.pid)
-        self.pid = 'none'
-        for proc in process.get_children(recursive=True):
-            proc.kill()
-        process.kill()
+        if not self.proc.poll():
+            self.proc.terminate()
         return True
     def run(self, pathToAlgDir):
         self.subprocthread = threading.Thread(target=self.runSubprocWithCapturing, args=(pathToAlgDir,))
         self.subprocthread.start()
     def runSubprocWithCapturing(self, pathToAlgDir):
-        p = subprocess.Popen([self.pathToPython, 'alg.py'],
+        self.proc = subprocess.Popen([self.pathToPython, 'alg.py', 'input'],
                              shell=False,
                              stdout=subprocess.PIPE,
                              stderr=subprocess.STDOUT,
                              cwd=pathToAlgDir,)
-        self.pid = p.pid
-        self.result, buff = p.communicate()
+        self.result, buff = self.proc.communicate()
+
