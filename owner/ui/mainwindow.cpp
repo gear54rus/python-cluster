@@ -180,8 +180,17 @@ void MainWindow::taskFinished(Task* task)
 
 void MainWindow::processFinished(int code, QProcess::ExitStatus status)
 {
-    if(runningLocal) {
-    }
+    QString resultPath("results/" + QDateTime::fromMSecsSinceEpoch(resultTimeStamp).toString("dd.MM.yyyy_HH-mm-ss.zzz") + "/" + QSN(runningLocal) + "/"),
+            jobPath("jobs/" + QSN(runningLocal) + "/");
+    QDir(resultPath).mkpath(".");
+    QFile path(jobPath + "path"), input(jobPath + "input"), meta(resultPath + "meta.local");
+    path.open(QFile::ReadOnly);
+    meta.open(QFile::WriteOnly);
+    meta.write(QString("type: remote\nnode: [%1] \ncode: %2\nstarted: %3\nfinished: %4\n").arg(QSN(runningLocal), QString(path.readAll()), QDateTime::fromMSecsSinceEpoch(localJobStartedAt).toUTC().toString(Qt::ISODate), QDateTime::fromMSecsSinceEpoch(QDateTime::currentMSecsSinceEpoch()).toUTC().toString(Qt::ISODate)).toLatin1());
+    if(!QFile(resultPath + "input").exists())
+        input.copy(resultPath + "input");
+    if(runLocal.size())
+        runLocalJob(runLocal.takeFirst());
 }
 
 void MainWindow::newEvent(Event* event)
@@ -240,10 +249,13 @@ void MainWindow::newEvent(Event* event)
                 meta.open(QFile::WriteOnly);
                 output.open(QFile::WriteOnly);
                 meta.write(QString("type: remote\nnode: [%1] %2 (%3)\ncode: %4\nstarted: %5\nfinished: %6\n").arg(QSN(node->getId()), node->getName(), node->getAddress(), QString(path.readAll()), QDateTime::fromMSecsSinceEpoch(node->jobStartedAt).toUTC().toString(Qt::ISODate), QDateTime::fromMSecsSinceEpoch(node->jobFinishedAt).toUTC().toString(Qt::ISODate)).toLatin1());
-                input.copy(resultPath + "input");
+                if(!QFile(resultPath + "input").exists())
+                    input.copy(resultPath + "input");
                 output.write(e->output);
             }
             logHtml(Info, QString("[%1] '%2' has finished the job at: %3 (remote), %4 (local)! Result folder is <a href=\"file:///C:/\">aaaa</a> '%5'.").arg(QSN(node->getId()), QString(node->getName()), QDateTime::fromMSecsSinceEpoch(node->jobFinishedAt).toString(dtFormat), QDateTime::fromMSecsSinceEpoch(node->jobFinishedAtLocal).toString(dtFormat), resultPath));
+            if(runningLocal || runningRemote)
+                checkRunning();
             break;
         }
         default: {
@@ -304,9 +316,33 @@ void MainWindow::nodeLeft(quint32 index, quint32 id)
 
 void MainWindow::runLocalJob(quint32 id)
 {
-    QString resultPath("results/" + QDateTime::fromMSecsSinceEpoch(resultTimeStamp).toString("dd.MM.yyyy_HH-mm-ss.zzz") + "/" + QSN(id) + "/");
+    QString resultPath("results/" + QDateTime::fromMSecsSinceEpoch(resultTimeStamp).toString("dd.MM.yyyy_HH-mm-ss.zzz") + "/" + QSN(id) + "/"),
+            jobPath("jobs/" + QSN(id) + "/");
     QDir(resultPath).mkpath(".");
-    QDir jobDir("jobs/" + QSN(id));
+    runner.setStandardErrorFile(resultPath + "output.local");
+    runner.setStandardOutputFile(resultPath + "output.local");
+    runner.start("python/python", QStringList("code") << "input");
+    localJobStartedAt = QDateTime::currentMSecsSinceEpoch();
+}
+
+void MainWindow::checkRunning()
+{
+    auto nodes = core->getNodeList();
+    Node* node;
+    bool runningRemote = false, runningLocal = false;
+    for(qint32 i = 0; i < nodes->length(); i++) {
+        node = nodes->at(i);
+        if(node->isWorking())
+            runningRemote = true;
+    }
+    if((runner.state() == QProcess::Running) || (runner.state() == QProcess::Running) || (runLocal.size()))
+        runningLocal =  true;
+    if(!runningRemote && !runningLocal) {
+        log(Info, "All jobs finished!");
+        this->runningLocal = false;
+        this->runningRemote = false;
+        on_listNodes_currentRowChanged(ui->listNodes->currentRow());
+    }
 }
 
 void MainWindow::on_listNodes_currentRowChanged(int currentRow)

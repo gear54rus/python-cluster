@@ -295,6 +295,21 @@ bool Node::processMessage()
                 }
                 case Working: {
                     switch(this->message.type) {
+                        case Accept:
+                        case Reject: {
+                            int index;
+                            if((index = taskIndex(Task::Stop)) != -1)  {
+                                Task* t = tasks.takeAt(index);
+                                if(this->message.type == Accept) {
+                                    t->finish(0);
+                                    status = ReadyToStart;
+                                } else
+                                    t->finish(1, this->message.body);
+                                emit taskFinished(t);
+                            } else
+                                throw 1;
+                            break;
+                        }
                         case Finished: {
                             if(this->message.body[8] == ';') {
                                 QDataStream s(this->message.body);
@@ -307,7 +322,7 @@ bool Node::processMessage()
                                 stream << static_cast<quint8>(Reject) << reason;
                                 emit unexpectedMessage(reason);
                             }
-                            status = ReadyToStart;
+                            status = Idle;
                             break;
                         }
                         default: {
