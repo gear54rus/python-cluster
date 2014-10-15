@@ -6,6 +6,7 @@
 #include <QStringList>
 #include <QMap>
 #include <QProcess>
+#include <QUrl>
 
 #include "listenwindow.h"
 #include "assignwindow.h"
@@ -52,6 +53,8 @@ private slots:
 
     void on_buttonKickAll_clicked();
 
+    void openLink(QUrl url);
+
 private:
     enum LogType {
         Info = 0,
@@ -69,7 +72,6 @@ private:
     QList<quint32> runLocal;
     quint64 resultTimeStamp, localJobStartedAt;
     void log(LogType type, const QString& message);
-    void logHtml(LogType type, const QString& message);
     void nodeLeft(quint32 index, quint32 id);
     void runLocalJob(quint32 id);
     void checkRunning();

@@ -81,7 +81,6 @@ void AssignWindow::on_buttonLoadTask_clicked()
     jobPath = QFileDialog::getOpenFileName(this, "Select job file...", !jobPath.isEmpty() ? QFileInfo(jobPath).dir().path() : ".");
     if(jobPath.isEmpty())
         return;
-    ui->buttonAssignJob->setFocus();
     QFile code(jobPath), input(jobPath + ".input");
     if((code.size() + input.size() + sizeof(quint32) * 2) > MAX_MESSAGE_LENGTH) {
         QMessageBox::warning(this, "File error!", QString("File(s) are too big. Code an input files together should not be bigger than 256MB.").arg(jobPath));
@@ -119,6 +118,7 @@ void AssignWindow::on_buttonLoadTask_clicked()
     inputChanged = false;
     codeChanged = false;
     ui->buttonAssignJob->setEnabled(true);
+    ui->buttonAssignJob->setFocus();
 }
 
 

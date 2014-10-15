@@ -32,6 +32,7 @@ MainWindow::MainWindow(QWidget* parent) :
     QObject::connect(core, SIGNAL(taskFinished(Task*)), this, SLOT(taskFinished(Task*)));
     QObject::connect(core, SIGNAL(newEvent(Event*)), this, SLOT(newEvent(Event*)));
     QObject::connect(ui->listNodes, SIGNAL(itemDoubleClicked(QListWidgetItem*)), this, SLOT(on_buttonAssign_clicked()));
+    QObject::connect(ui->logBrowser, SIGNAL(anchorClicked(QUrl)), this, SLOT(openLink(QUrl)));
     QDir::setCurrent(QApplication::applicationDirPath());
     {
         QStringList* l = new QStringList();
@@ -88,6 +89,7 @@ int MainWindow::show()
         log(Info, "Found 'results' directory.");
     QWidget::show();
     log(Info, "Started!");
+    runLocalJob(0);
     return 0;
 }
 
@@ -180,15 +182,19 @@ void MainWindow::taskFinished(Task* task)
 
 void MainWindow::processFinished(int code, QProcess::ExitStatus status)
 {
+    runner.close();
+    return;
     QString resultPath("results/" + QDateTime::fromMSecsSinceEpoch(resultTimeStamp).toString("dd.MM.yyyy_HH-mm-ss.zzz") + "/" + QSN(runningLocal) + "/"),
             jobPath("jobs/" + QSN(runningLocal) + "/");
     QDir(resultPath).mkpath(".");
     QFile path(jobPath + "path"), input(jobPath + "input"), meta(resultPath + "meta.local");
     path.open(QFile::ReadOnly);
     meta.open(QFile::WriteOnly);
-    meta.write(QString("type: remote\nnode: [%1] \ncode: %2\nstarted: %3\nfinished: %4\n").arg(QSN(runningLocal), QString(path.readAll()), QDateTime::fromMSecsSinceEpoch(localJobStartedAt).toUTC().toString(Qt::ISODate), QDateTime::fromMSecsSinceEpoch(QDateTime::currentMSecsSinceEpoch()).toUTC().toString(Qt::ISODate)).toLatin1());
+    quint64 finished = QDateTime::currentMSecsSinceEpoch();
+    meta.write(QString("type: remote\nnode: [%1] \ncode: %2\nstarted: %3\nfinished: %4\n").arg(QSN(runningLocal), QString(path.readAll()), QDateTime::fromMSecsSinceEpoch(localJobStartedAt).toUTC().toString(Qt::ISODate), QDateTime::fromMSecsSinceEpoch(finished).toUTC().toString(Qt::ISODate)).toLatin1());
     if(!QFile(resultPath + "input").exists())
         input.copy(resultPath + "input");
+    log(Info, QString("Local job for [%1] has finished at: %3! <a href=\"file:///%5\">Result folder</a>.").arg(QSN(runningLocal), QDateTime::fromMSecsSinceEpoch(finished).toString("dd-MM hh:mm:ss.zzz"), QDir::current().path() + "/" + resultPath));
     if(runLocal.size())
         runLocalJob(runLocal.takeFirst());
 }
@@ -253,7 +259,7 @@ void MainWindow::newEvent(Event* event)
                     input.copy(resultPath + "input");
                 output.write(e->output);
             }
-            logHtml(Info, QString("[%1] '%2' has finished the job at: %3 (remote), %4 (local)! Result folder is <a href=\"file:///C:/\">aaaa</a> '%5'.").arg(QSN(node->getId()), QString(node->getName()), QDateTime::fromMSecsSinceEpoch(node->jobFinishedAt).toString(dtFormat), QDateTime::fromMSecsSinceEpoch(node->jobFinishedAtLocal).toString(dtFormat), resultPath));
+            log(Info, QString("[%1] '%2' has finished the job at: %3 (remote), %4 (local)! <a href=\"file:///%5\">Result folder</a>.").arg(QSN(node->getId()), QString(node->getName()), QDateTime::fromMSecsSinceEpoch(node->jobFinishedAt).toString(dtFormat), QDateTime::fromMSecsSinceEpoch(node->jobFinishedAtLocal).toString(dtFormat), QDir::current().path() + "/" + resultPath));
             if(runningLocal || runningRemote)
                 checkRunning();
             break;
@@ -273,22 +279,18 @@ void MainWindow::on_buttonListen_clicked()
     }
 }
 
-void MainWindow::log(LogType type, const QString& message)
+void MainWindow::openLink(QUrl url)
 {
-    QScrollBar* bar = ui->editLog->verticalScrollBar();
-    bool scroll = (bar->maximum() == bar->value());
-    ui->editLog->appendPlainText(QString("%1 [%2] %3").arg(QDateTime::currentDateTime().toString("dd-MM-yyyy hh:mm:ss.zzz"), logTypes[type], message));
-    if(scroll)
-        ui->editLog->ensureCursorVisible();
+    QDesktopServices::openUrl(url);
 }
 
-void MainWindow::logHtml(LogType type, const QString& message)
+void MainWindow::log(LogType type, const QString& message)
 {
-    QScrollBar* bar = ui->editLog->verticalScrollBar();
+    QScrollBar* bar = ui->logBrowser->verticalScrollBar();
     bool scroll = (bar->maximum() == bar->value());
-    ui->editLog->appendHtml(QString("%1 [%2] %3").arg(QDateTime::currentDateTime().toString("dd-MM-yyyy hh:mm:ss.zzz"), logTypes[type], message));
+    ui->logBrowser->append(QString("%1 [%2] %3").arg(QDateTime::currentDateTime().toString("dd-MM-yyyy hh:mm:ss.zzz"), logTypes[type], message));
     if(scroll)
-        ui->editLog->ensureCursorVisible();
+        ui->logBrowser->ensureCursorVisible();
 }
 
 void MainWindow::nodeLeft(quint32 index, quint32 id)
@@ -316,6 +318,10 @@ void MainWindow::nodeLeft(quint32 index, quint32 id)
 
 void MainWindow::runLocalJob(quint32 id)
 {
+    runner.setStandardOutputFile("a");
+    runner.setStandardErrorFile("b");
+    runner.start("dir");
+    return;
     QString resultPath("results/" + QDateTime::fromMSecsSinceEpoch(resultTimeStamp).toString("dd.MM.yyyy_HH-mm-ss.zzz") + "/" + QSN(id) + "/"),
             jobPath("jobs/" + QSN(id) + "/");
     QDir(resultPath).mkpath(".");
@@ -502,9 +508,11 @@ void MainWindow::on_buttonStopAll_clicked()
             emit newTask(new StopTask(i));
         }
     }
-    log(Info, "Killing local job runner...");
-    runner.kill();
-    log(Info, "Local job runner killed...");
+    if(runner.state() != QProcess::NotRunning) {
+        log(Info, "Killing local job runner...");
+        runner.kill();
+        log(Info, "Local job runner killed...");
+    }
     runningLocal = false;
     runningRemote = false;
 }
