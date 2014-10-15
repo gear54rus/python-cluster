@@ -15,8 +15,9 @@ class worker:
             return True
         return False
     def stop(self):
-        if not self.proc.poll():
-            self.proc.terminate()
+        if not self.proc == 'none':
+            if not self.proc.poll():
+                self.proc.terminate()
         return True
     def run(self, pathToAlgDir):
         self.subprocthread = threading.Thread(target=self.runSubprocWithCapturing, args=(pathToAlgDir,))

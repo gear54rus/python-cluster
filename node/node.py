@@ -63,9 +63,6 @@ class node:
     def getStatus(self):
         return self.status
 
-    def stopWorkerTread(self):
-        return True
-
     def run(self):
         var = 'true'
         while var:
@@ -126,7 +123,7 @@ class node:
                 self.status = 'disconnected'
                 print('Server disconnected. Reason: ' + msg['reason'])
                 if self.status == 'working':
-                    self.stopWorkerTread()
+                    self.worker.stop()
                 return 1
             if msg['type'] == 'Stop':
                 if self.status == 'working':
@@ -136,14 +133,12 @@ class node:
                 else:
                     reason = 'Nothing to stop there'
                     print(reason)
-                    self.connection.sendMessage('Reject',reason)
+                    self.connection.sendMessage('Reject', reason)
         return 1
 
     def disconnect(self, reason):
         self.connection.sendMessage('Disconnect', reason)
         return 1
-
-
 
     def getTaskFullName(self):
         return self.name + '.task'
