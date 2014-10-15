@@ -230,7 +230,7 @@ void MainWindow::newEvent(Event* event)
             auto e = static_cast<JobFinishedEvent*>(event);
             Node* node = core->getNodeList()->at(e->index);
             QString dtFormat("dd-MM hh:mm:ss.zzz"),
-                    resultPath("results/" + QDateTime::fromMSecsSinceEpoch(remoteResultTimeStamp).toString("dd.MM.yyyy_HH-mm-ss.zzz") + "/" + QSN(node->getId()) + "/");
+                    resultPath("results/" + QDateTime::fromMSecsSinceEpoch(resultTimeStamp).toString("dd.MM.yyyy_HH-mm-ss.zzz") + "/" + QSN(node->getId()) + "/");
             ui->listNodes->item(e->index)->setText(QString("[%1] %2 (%3) - %4").arg(QSN(node->getId()), node->getName(), node->getAddress(), node->getStatus()));
             {
                 QDir(resultPath).mkpath(".");
@@ -282,6 +282,19 @@ void MainWindow::logHtml(LogType type, const QString& message)
 void MainWindow::nodeLeft(quint32 index, quint32 id)
 {
     delete ui->listNodes->takeItem(index);
+    if(runningLocal == id) {
+        log(Info, QString("Killing local job for [%1]...").arg(QSN(id)));
+        runner.kill();
+        if(runLocal.size()) {
+            quint32 newId = runLocal.takeFirst();
+            runLocalJob(newId);
+            log(Info, QString("Starting local job for [%1]...").arg(QSN(newId)));
+        } else
+            log(Info, "No more jobs left. Local runner has finished.");
+    } else {
+        runLocal.removeOne(id);
+        log(Info, QString("Removing local job for [%1].").arg(id));
+    }
     QDir("jobs/" + QSN(id)).removeRecursively();
     if(!core->getNodeList()->size()) {
         ui->buttonKickAll->setEnabled(false);
@@ -291,6 +304,8 @@ void MainWindow::nodeLeft(quint32 index, quint32 id)
 
 void MainWindow::runLocalJob(quint32 id)
 {
+    QString resultPath("results/" + QDateTime::fromMSecsSinceEpoch(resultTimeStamp).toString("dd.MM.yyyy_HH-mm-ss.zzz") + "/" + QSN(id) + "/");
+    QDir(resultPath).mkpath(".");
     QDir jobDir("jobs/" + QSN(id));
 }
 
@@ -383,28 +398,61 @@ void MainWindow::on_buttonKick_clicked()
 
 void MainWindow::on_buttonStartRemote_clicked()
 {
-    remoteResultTimeStamp = QDateTime::currentMSecsSinceEpoch();
-    if(!runningLocal)
+    if(runningRemote) {
+        log(Info, "Already running remote jobs...");
+        return;
+    }
+    if(!runningLocal) {
         runLocal.clear();
+        resultTimeStamp = QDateTime::currentMSecsSinceEpoch();
+    }
     auto nodes = core->getNodeList();
     Node* node;
+    bool found = false;
     for(qint32 i = 0; i < nodes->length(); i++) {
         node = nodes->at(i);
         if(node->isReadyToStart()) {
-            log(Info, QString("Starting remote task on [%1] \'%2\'...").arg(QSN(node->getId()), QString(node->getName())));
+            log(Info, QString("Starting remote job on [%1] \'%2\'...").arg(QSN(node->getId()), QString(node->getName())));
             if(!runningLocal)
                 runLocal.append(node->getId());
             emit newTask(new StartTask(i));
+            found = true;
         }
     }
-    runningRemote = true;
+    if(found) {
+        runningRemote = true;
+        ui->buttonAssign->setEnabled(false);
+    } else
+        log(Info, "No nodes are marked \'Ready to start\'.");
 }
 
 void MainWindow::on_buttonStartLocal_clicked()
 {
-//    if (runningRemote)
-//    else
-    runningLocal = true;
+    if(runningLocal) {
+        log(Info, "Already running local jobs...");
+        return;
+    }
+    bool found = false;
+    if(!runningRemote) {
+        runLocal.clear();
+        resultTimeStamp = QDateTime::currentMSecsSinceEpoch();
+        auto nodes = core->getNodeList();
+        Node* node;
+        for(qint32 i = 0; i < nodes->length(); i++) {
+            node = nodes->at(i);
+            if(node->isReadyToStart()) {
+                runLocal.append(node->getId());
+                found = true;
+            }
+        }
+    } else
+        found = runLocal.size();
+    if(found) {
+        runLocalJob(runLocal.takeFirst());
+        runningLocal = true;
+        ui->buttonAssign->setEnabled(false);
+    } else
+        log(Info, "No nodes are marked \'Ready to start\'.");
 }
 
 void MainWindow::on_buttonStopAll_clicked()
@@ -414,10 +462,13 @@ void MainWindow::on_buttonStopAll_clicked()
     for(qint32 i = 0; i < nodes->length(); i++) {
         node = nodes->at(i);
         if(node->isWorking()) {
-            log(Info, QString("Stopping remote task on [%2] '%3'...").arg(QSN(node->getId()), QString(node->getName())));
+            log(Info, QString("Stopping remote job on [%2] '%3'...").arg(QSN(node->getId()), QString(node->getName())));
             emit newTask(new StopTask(i));
         }
     }
+    log(Info, "Killing local job runner...");
+    runner.kill();
+    log(Info, "Local job runner killed...");
     runningLocal = false;
     runningRemote = false;
 }

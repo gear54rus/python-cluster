@@ -307,7 +307,7 @@ bool Node::processMessage()
                                 stream << static_cast<quint8>(Reject) << reason;
                                 emit unexpectedMessage(reason);
                             }
-                            status = Idle;
+                            status = ReadyToStart;
                             break;
                         }
                         default: {
