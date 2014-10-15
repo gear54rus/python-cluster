@@ -128,10 +128,15 @@ class node:
                 if self.status == 'working':
                     self.stopWorkerTread()
                 return 1
-            if msg['type'] == 'Stop' and self.status == 'working':
-                self.worker.stop()
-                self.changeStatus('ready to start')
-                self.connection.sendMessage('Accept')
+            if msg['type'] == 'Stop':
+                if self.status == 'working':
+                    self.worker.stop()
+                    self.changeStatus('ready to start')
+                    self.connection.sendMessage('Accept')
+                else:
+                    reason = 'Nothing to stop there'
+                    print(reason)
+                    self.connection.sendMessage('Reject',reason)
         return 1
 
     def disconnect(self, reason):

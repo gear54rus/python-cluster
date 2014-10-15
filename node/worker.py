@@ -3,9 +3,6 @@ import threading
 
 class worker:
     """description of class"""
-    result = False
-    proc = 'none'
-    subprocthread = 'none'
     def __init__(self, pythonPath):
         self.pathToPython = pythonPath
         self.clear()
