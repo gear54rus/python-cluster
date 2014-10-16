@@ -1,11 +1,7 @@
 import time
 import sys
 
-
-sys.stdout = open('log', 'w')
-sys.stderr = sys.stdout
-
-f = open('input', 'rb')
+f = open(sys.argv[1], 'rb')
 number = f.read(1)
 number = int(number)
 numberofcycles = 10000
