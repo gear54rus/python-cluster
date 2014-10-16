@@ -191,7 +191,7 @@ void MainWindow::processFinished(int, QProcess::ExitStatus)
     meta.write(QString("type: remote\nnode: [%1] \ncode: %2\nstarted: %3\nfinished: %4\n").arg(QSN(runningLocal), QString(path.readAll()), QDateTime::fromMSecsSinceEpoch(localJobStartedAt).toUTC().toString(Qt::ISODate), QDateTime::fromMSecsSinceEpoch(finished).toUTC().toString(Qt::ISODate)).toLatin1());
     if(!QFile(resultPath + "input").exists())
         input.copy(resultPath + "input");
-    log(Info, QString("Local job for [%1] has finished at: %3! <a href=\"file:///%5\">Result folder</a>.").arg(QSN(runningLocal), QDateTime::fromMSecsSinceEpoch(finished).toString("dd-MM hh:mm:ss.zzz"), QDir::current().path() + "/" + resultPath));
+    log(Info, QString("Local job for [%1] has finished at: %3! <a href=\"file:///%5\">[ Result folder ]</a>.").arg(QSN(runningLocal), QDateTime::fromMSecsSinceEpoch(finished).toString("dd-MM hh:mm:ss.zzz"), QDir::current().path() + "/" + resultPath));
     if(runLocal.size())
         runLocalJob(runLocal.takeFirst());
     else
@@ -258,7 +258,7 @@ void MainWindow::newEvent(Event* event)
                     input.copy(resultPath + "input");
                 output.write(e->output);
             }
-            log(Info, QString("[%1] '%2' has finished the job at: %3 (remote), %4 (local)! <a href=\"file:///%5\">Result folder</a>.").arg(QSN(node->getId()), QString(node->getName()), QDateTime::fromMSecsSinceEpoch(node->jobFinishedAt).toString(dtFormat), QDateTime::fromMSecsSinceEpoch(node->jobFinishedAtLocal).toString(dtFormat), QDir::current().path() + "/" + resultPath));
+            log(Info, QString("[%1] '%2' has finished the job at: %3 (remote), %4 (local)! <a href=\"file:///%5\">[ Result folder ]</a>.").arg(QSN(node->getId()), QString(node->getName()), QDateTime::fromMSecsSinceEpoch(node->jobFinishedAt).toString(dtFormat), QDateTime::fromMSecsSinceEpoch(node->jobFinishedAtLocal).toString(dtFormat), QDir::current().path() + "/" + resultPath));
             if(runningLocal || runningRemote)
                 checkRunning();
             break;
@@ -295,17 +295,19 @@ void MainWindow::log(LogType type, const QString& message)
 void MainWindow::nodeLeft(quint32 index, quint32 id)
 {
     delete ui->listNodes->takeItem(index);
-    if(runningLocal == id) {
-        log(Info, QString("Killing local job for [%1]...").arg(QSN(id)));
-        runner.kill();
-        if(runLocal.size()) {
-            quint32 newId = runLocal.takeFirst();
-            runLocalJob(newId);
-        } else
-            log(Info, "No more jobs left. Local runner has finished.");
-    } else {
-        runLocal.removeOne(id);
-        log(Info, QString("Removing local job for [%1].").arg(id));
+    if(runningLocal) {
+        if(runningLocal == id) {
+            log(Info, QString("Killing local job for [%1]...").arg(QSN(id)));
+            runner.kill();
+            if(runLocal.size()) {
+                quint32 newId = runLocal.takeFirst();
+                runLocalJob(newId);
+            } else
+                log(Info, "No more jobs left. Local runner has finished.");
+        } else {
+            runLocal.removeOne(id);
+            log(Info, QString("Removing local job for [%1].").arg(id));
+        }
     }
     QDir("jobs/" + QSN(id)).removeRecursively();
     if(!core->getNodeList()->size()) {
@@ -332,18 +334,15 @@ void MainWindow::runLocalJob(quint32 id)
 void MainWindow::checkRunning()
 {
     auto nodes = core->getNodeList();
-    Node* node;
-    bool runningRemote = false, runningLocal = false;
+    bool runningRemote = false;
     for(qint32 i = 0; i < nodes->length(); i++) {
-        node = nodes->at(i);
-        if(node->isWorking())
+        if(nodes->at(i)->isWorking())
             runningRemote = true;
     }
-    if((runner.state() == QProcess::Starting) || (runner.state() == QProcess::Running))
-        runningLocal = true;
-    this->runningLocal = runningLocal;
     this->runningRemote = runningRemote;
-    if(!runningRemote && !runningLocal) {
+    if(runner.state() == QProcess::NotRunning)
+        this->runningLocal = 0;
+    if(!runningRemote && !this->runningLocal) {
         log(Info, "All jobs finished!");
         on_listNodes_currentRowChanged(ui->listNodes->currentRow());
     }

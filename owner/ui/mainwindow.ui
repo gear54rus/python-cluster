@@ -46,6 +46,9 @@
         <property name="acceptRichText">
          <bool>false</bool>
         </property>
+        <property name="cursorWidth">
+         <number>0</number>
+        </property>
         <property name="textInteractionFlags">
          <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse|Qt::TextBrowserInteraction|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
         </property>
