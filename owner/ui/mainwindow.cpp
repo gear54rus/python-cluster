@@ -62,7 +62,7 @@ int MainWindow::show()
     QDir::setCurrent(QApplication::applicationDirPath());
     QFile pythonBin("python/python.exe");
     if(!pythonBin.exists()) {
-        QMessageBox::critical(this, "Error", "Python interpreter not found ('./python/python.exe')!");
+        QMessageBox::critical(this, "Error", QString("Python interpreter not found ('%1')!").arg(QDir::toNativeSeparators("./python/python.exe")));
         return 1;
     }
     runner.start(pythonBin.fileName() + " -V");
@@ -287,7 +287,7 @@ void MainWindow::log(LogType type, const QString& message)
 {
     QScrollBar* bar = ui->logBrowser->verticalScrollBar();
     bool scroll = (bar->maximum() == bar->value());
-    ui->logBrowser->append(QString("%1 [%2] %3").arg(QDateTime::currentDateTime().toString("dd-MM-yyyy hh:mm:ss.zzz"), logTypes[type], message));
+    ui->logBrowser->append(QString("<span>%1 [%2] %3</span>").arg(QDateTime::currentDateTime().toString("dd-MM-yyyy hh:mm:ss.zzz"), logTypes[type], message));
     if(scroll)
         bar->setValue(bar->maximum());
 }
