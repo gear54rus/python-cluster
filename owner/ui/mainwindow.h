@@ -32,7 +32,7 @@ signals:
 private slots:
     void taskFinished(Task* task);
     void newEvent(Event* event);
-    void processFinished(int code, QProcess::ExitStatus status);
+    void processFinished(int, QProcess::ExitStatus);
     void on_buttonListen_clicked();
 
     void on_listNodes_currentRowChanged(int currentRow);

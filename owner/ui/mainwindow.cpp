@@ -62,7 +62,7 @@ int MainWindow::show()
     QDir::setCurrent(QApplication::applicationDirPath());
     QFile pythonBin("python/python.exe");
     if(!pythonBin.exists()) {
-        QMessageBox::critical(this, "Error", "Python interpreter not found ('python/python.exe')!");
+        QMessageBox::critical(this, "Error", "Python interpreter not found ('./python/python.exe')!");
         return 1;
     }
     runner.start(pythonBin.fileName() + " -V");
@@ -89,7 +89,6 @@ int MainWindow::show()
         log(Info, "Found 'results' directory.");
     QWidget::show();
     log(Info, "Started!");
-    runLocalJob(0);
     return 0;
 }
 
@@ -180,10 +179,8 @@ void MainWindow::taskFinished(Task* task)
     delete task;
 }
 
-void MainWindow::processFinished(int code, QProcess::ExitStatus status)
+void MainWindow::processFinished(int, QProcess::ExitStatus)
 {
-    runner.close();
-    return;
     QString resultPath("results/" + QDateTime::fromMSecsSinceEpoch(resultTimeStamp).toString("dd.MM.yyyy_HH-mm-ss.zzz") + "/" + QSN(runningLocal) + "/"),
             jobPath("jobs/" + QSN(runningLocal) + "/");
     QDir(resultPath).mkpath(".");
@@ -197,6 +194,8 @@ void MainWindow::processFinished(int code, QProcess::ExitStatus status)
     log(Info, QString("Local job for [%1] has finished at: %3! <a href=\"file:///%5\">Result folder</a>.").arg(QSN(runningLocal), QDateTime::fromMSecsSinceEpoch(finished).toString("dd-MM hh:mm:ss.zzz"), QDir::current().path() + "/" + resultPath));
     if(runLocal.size())
         runLocalJob(runLocal.takeFirst());
+    else
+        checkRunning();
 }
 
 void MainWindow::newEvent(Event* event)
@@ -290,7 +289,7 @@ void MainWindow::log(LogType type, const QString& message)
     bool scroll = (bar->maximum() == bar->value());
     ui->logBrowser->append(QString("%1 [%2] %3").arg(QDateTime::currentDateTime().toString("dd-MM-yyyy hh:mm:ss.zzz"), logTypes[type], message));
     if(scroll)
-        ui->logBrowser->ensureCursorVisible();
+        bar->setValue(bar->maximum());
 }
 
 void MainWindow::nodeLeft(quint32 index, quint32 id)
@@ -302,7 +301,6 @@ void MainWindow::nodeLeft(quint32 index, quint32 id)
         if(runLocal.size()) {
             quint32 newId = runLocal.takeFirst();
             runLocalJob(newId);
-            log(Info, QString("Starting local job for [%1]...").arg(QSN(newId)));
         } else
             log(Info, "No more jobs left. Local runner has finished.");
     } else {
@@ -318,16 +316,16 @@ void MainWindow::nodeLeft(quint32 index, quint32 id)
 
 void MainWindow::runLocalJob(quint32 id)
 {
-    runner.setStandardOutputFile("a");
-    runner.setStandardErrorFile("b");
-    runner.start("dir");
-    return;
     QString resultPath("results/" + QDateTime::fromMSecsSinceEpoch(resultTimeStamp).toString("dd.MM.yyyy_HH-mm-ss.zzz") + "/" + QSN(id) + "/"),
             jobPath("jobs/" + QSN(id) + "/");
     QDir(resultPath).mkpath(".");
+    runner.setWorkingDirectory(jobPath);
     runner.setStandardErrorFile(resultPath + "output.local");
     runner.setStandardOutputFile(resultPath + "output.local");
-    runner.start("python/python", QStringList("code") << "input");
+    runner.setEnvironment(QStringList("PYTHONPATH="));
+    log(Info, QString("Starting local job for [%1]...").arg(QSN(id)));
+    runner.start(QDir::toNativeSeparators("python/python"), QStringList("code") << "input");
+    runningLocal = id;
     localJobStartedAt = QDateTime::currentMSecsSinceEpoch();
 }
 
@@ -341,12 +339,12 @@ void MainWindow::checkRunning()
         if(node->isWorking())
             runningRemote = true;
     }
-    if((runner.state() == QProcess::Running) || (runner.state() == QProcess::Running) || (runLocal.size()))
-        runningLocal =  true;
+    if((runner.state() == QProcess::Starting) || (runner.state() == QProcess::Running))
+        runningLocal = true;
+    this->runningLocal = runningLocal;
+    this->runningRemote = runningRemote;
     if(!runningRemote && !runningLocal) {
         log(Info, "All jobs finished!");
-        this->runningLocal = false;
-        this->runningRemote = false;
         on_listNodes_currentRowChanged(ui->listNodes->currentRow());
     }
 }
@@ -366,6 +364,8 @@ void MainWindow::on_listNodes_currentRowChanged(int currentRow)
 }
 void MainWindow::on_buttonAssign_clicked()
 {
+    if(runningLocal || runningRemote)
+        return;
     quint32 index = ui->listNodes->currentRow();
     auto nodes = core->getNodeList();
     Node* node = nodes->at(index);
@@ -408,12 +408,12 @@ void MainWindow::on_buttonAssign_clicked()
             taskDir.mkpath(".");
             if(assignWindow->code.length()) {
                 path.open(QFile::WriteOnly | QFile::Truncate);
-                path.write(QDir::toNativeSeparators(assignWindow->jobPath).toLocal8Bit());
+                path.write(assignWindow->jobPath.toLocal8Bit());
                 input.open(QFile::WriteOnly | QFile::Truncate);
                 input.write(assignWindow->input);
                 code.open(QFile::WriteOnly | QFile::Truncate);
                 code.write(assignWindow->code);
-                log(Info, QString("Assigning '%1' to [%2] '%3'...").arg(QDir::toNativeSeparators(assignWindow->jobPath) , QSN(nodeId), nodeName));
+                log(Info, QString("Assigning '%1' to [%2] '%3'...").arg(assignWindow->jobPath, QSN(nodeId), nodeName));
             } else {
                 taskDir.removeRecursively();
                 log(Info, QString("Removing task from [%1] '%2'...").arg(QSN(nodeId), nodeName));
@@ -490,6 +490,7 @@ void MainWindow::on_buttonStartLocal_clicked()
     } else
         found = runLocal.size();
     if(found) {
+        log(Info, "Starting local jobs...");
         runLocalJob(runLocal.takeFirst());
         runningLocal = true;
         ui->buttonAssign->setEnabled(false);
@@ -510,6 +511,7 @@ void MainWindow::on_buttonStopAll_clicked()
     }
     if(runner.state() != QProcess::NotRunning) {
         log(Info, "Killing local job runner...");
+        runLocal.clear();
         runner.kill();
         log(Info, "Local job runner killed...");
     }

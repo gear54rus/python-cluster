@@ -219,10 +219,16 @@ bool Node::processMessage()
         try {
             switch(status) {
                 case Connecting: {
-                    QRegularExpressionMatch match = QRegularExpression("^(\\d+\\.\\d+\\.\\d+);((?:[a-z_][a-z0-9_]*,?)*)").match(this->message.body);
+                    QRegularExpressionMatch match = QRegularExpression("^(\\d+\\.\\d+\\.\\d+);").match(this->message.body);
                     if(match.hasMatch()) {
                         version = match.captured(1);
-                        modules = match.captured(2).split(',', QString::SkipEmptyParts);
+                        QRegularExpression moduleName("^[a-z_][a-z0-9_]*$");
+                        QStringList parts = QString(this->message.body).split(',', QString::SkipEmptyParts);
+                        foreach(QString v, parts) {
+                            match = moduleName.match(v);
+                            if(match.hasMatch())
+                                modules.append(match.captured());
+                        }
                         modules.sort();
                         status = Idle;
                         stream << static_cast<quint8>(Accept) << name;
