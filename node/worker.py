@@ -33,7 +33,7 @@ class worker:
         self.result, buff = self.proc.communicate()
 
         try:
-            if self.proc.returncode == 0:
+            if self.proc.returncode != -1:
                 self._isFinished = True
         except:
             self._isFinished = False
