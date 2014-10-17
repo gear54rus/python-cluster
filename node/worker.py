@@ -5,12 +5,12 @@ class worker:
     """description of class"""
     def __init__(self, pythonPath):
         self.pathToPython = pythonPath
-        self.status = 'idle'
         self.clear()
     def clear(self):
         self.proc = 'none'
         self.result = False
         self.subprocthread = 'none'
+        self.status = 'idle'
         self._isFinished = False
     def isFinished(self):
         return self._isFinished
@@ -19,8 +19,7 @@ class worker:
             if not self.proc.poll():
                 self.proc.terminate()
                 self.clear()
-                self.status = 'Terminated'
-        return True
+                return True
     def run(self, pathToAlgDir):
         self.status = 'working'
         self.subprocthread = threading.Thread(target=self.runSubprocWithCapturing, args=(pathToAlgDir,))
@@ -32,8 +31,9 @@ class worker:
                              stderr=subprocess.STDOUT,
                              cwd=pathToAlgDir,)
         self.result, buff = self.proc.communicate()
-        if self.status == 'Terminated':
-            self.clear()
-        else:
-            self._isFinished = True
-        self.status = 'idle'
+
+        try:
+            if self.proc.returncode == 0:
+                self._isFinished = True
+        except:
+            self._isFinished = False
