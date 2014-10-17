@@ -302,14 +302,27 @@ void MainWindow::nodeLeft(quint32 index, quint32 id)
             if(runLocal.size()) {
                 quint32 newId = runLocal.takeFirst();
                 runLocalJob(newId);
-            } else
+                log(Info, QString("Job killed. Starting local job for [%1]...").arg(QSN(newId)));
+            } else {
                 log(Info, "No more jobs left. Local runner has finished.");
+                runningLocal = 0;
+            }
         } else {
             runLocal.removeOne(id);
             log(Info, QString("Removing local job for [%1].").arg(id));
         }
     }
     QDir("jobs/" + QSN(id)).removeRecursively();
+    if(runningRemote) {
+        auto nodes = core->getNodeList();
+        bool found = false;
+        foreach(Node * node, *nodes) {
+            found = node->isWorking();
+        }
+        runningRemote = found;
+        if(!found)
+            log(Info, "No remote jobs are currently running.");
+    }
     if(!core->getNodeList()->size()) {
         ui->buttonKickAll->setEnabled(false);
         ui->buttonStatusAll->setEnabled(false);
