@@ -55,6 +55,8 @@ private slots:
 
     void openLink(QUrl url);
 
+    void on_labelLog_linkActivated(const QString&);
+
 private:
     enum LogType {
         Info = 0,

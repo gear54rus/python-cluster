@@ -191,7 +191,7 @@ void MainWindow::processFinished(int, QProcess::ExitStatus)
     meta.write(QString("type: remote\nnode: [%1] \ncode: %2\nstarted: %3\nfinished: %4\n").arg(QSN(runningLocal), QString(path.readAll()), QDateTime::fromMSecsSinceEpoch(localJobStartedAt).toUTC().toString(Qt::ISODate), QDateTime::fromMSecsSinceEpoch(finished).toUTC().toString(Qt::ISODate)).toLatin1());
     if(!QFile(resultPath + "input").exists())
         input.copy(resultPath + "input");
-    log(Info, QString("Local job for [%1] has finished at: %3! <a href=\"file:///%5\">[ Result folder ]</a>.").arg(QSN(runningLocal), QDateTime::fromMSecsSinceEpoch(finished).toString("dd-MM hh:mm:ss.zzz"), QDir::current().path() + "/" + resultPath));
+    log(Info, QString("Local job for [%1] has finished at: %3! [<a href=\"file:///%5\">Result folder</a>].").arg(QSN(runningLocal), QDateTime::fromMSecsSinceEpoch(finished).toString("dd-MM hh:mm:ss.zzz"), QDir::current().path() + "/" + resultPath));
     if(runLocal.size())
         runLocalJob(runLocal.takeFirst());
     else
@@ -258,7 +258,7 @@ void MainWindow::newEvent(Event* event)
                     input.copy(resultPath + "input");
                 output.write(e->output);
             }
-            log(Info, QString("[%1] '%2' has finished the job at: %3 (remote), %4 (local)! <a href=\"file:///%5\">[ Result folder ]</a>.").arg(QSN(node->getId()), QString(node->getName()), QDateTime::fromMSecsSinceEpoch(node->jobFinishedAt).toString(dtFormat), QDateTime::fromMSecsSinceEpoch(node->jobFinishedAtLocal).toString(dtFormat), QDir::current().path() + "/" + resultPath));
+            log(Info, QString("[%1] '%2' has finished the job at: %3 (remote), %4 (local)! [<a href=\"file:///%5\">Result folder</a>].").arg(QSN(node->getId()), QString(node->getName()), QDateTime::fromMSecsSinceEpoch(node->jobFinishedAt).toString(dtFormat), QDateTime::fromMSecsSinceEpoch(node->jobFinishedAtLocal).toString(dtFormat), QDir::current().path() + "/" + resultPath));
             if(runningLocal || runningRemote)
                 checkRunning();
             break;
@@ -343,7 +343,7 @@ void MainWindow::checkRunning()
     if(runner.state() == QProcess::NotRunning)
         this->runningLocal = 0;
     if(!runningRemote && !this->runningLocal) {
-        log(Info, "All jobs finished!");
+        log(Info, "All jobs are finished!");
         on_listNodes_currentRowChanged(ui->listNodes->currentRow());
     }
 }
@@ -540,4 +540,9 @@ void MainWindow::on_buttonKickAll_clicked()
     }
     while(length--)
         emit newTask(new KickTask(0));
+}
+
+void MainWindow::on_labelLog_linkActivated(const QString&)
+{
+    ui->logBrowser->clear();
 }

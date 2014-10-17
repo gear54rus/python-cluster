@@ -31,7 +31,7 @@
       <item>
        <widget class="QLabel" name="labelLog">
         <property name="text">
-         <string>Log:</string>
+         <string>Log [&lt;a href=&quot;#&quot;&gt;clear&lt;/a&gt;]:</string>
         </property>
        </widget>
       </item>
