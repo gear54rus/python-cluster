@@ -5,6 +5,7 @@ import os
 import time
 import shutil
 import struct
+import socket
 import threading
 
 statusenum = {
@@ -74,7 +75,10 @@ class node:
                 print('NODE: Has finished task, waiting new task')
             try:
                 msg = self.connection.checkSocket()
-            except Exception:
+            except socket.timeout as e:
+                continue
+            except Exception as e:
+                print('EXCEPTION: {0}'.format(e))
                 #dirty code
                 continue
             if not msg:

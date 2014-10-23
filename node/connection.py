@@ -19,12 +19,15 @@ class connection:
             return False
         return True
     def readSocket(self, count):
-        buff = self.sock.recv(count)
-        return buff
+        data = self.sock.recv(count)
+        while len(data) != count:
+            buff = self.sock.recv(count - len(data))
+            data = data + buff
+        return data
     def readLenData(self):
         """ returns data only """
         length = messages.BEByteStrToInt(self.readSocket(4))
-        data = self.sock.recv(length)
+        data = self.readSocket(length)
         return data
     def checkSocket(self):
         try:
