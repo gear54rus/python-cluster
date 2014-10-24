@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <ctime>
 #include <QDateTime>
+#include <QTextStream>
 #include <QListWidgetItem>
 #include <QMessageBox>
 #include <QRegularExpression>
@@ -182,16 +183,17 @@ void MainWindow::taskFinished(Task* task)
 void MainWindow::processFinished(int, QProcess::ExitStatus)
 {
     QString resultPath("results/" + QDateTime::fromMSecsSinceEpoch(resultTimeStamp).toString("dd.MM.yyyy_HH-mm-ss.zzz") + "/" + QSN(runningLocal) + "/"),
-            jobPath("jobs/" + QSN(runningLocal) + "/");
+            jobPath("jobs/" + QSN(runningLocal) + "/"),
+            dtFormatMeta("yyyy-MM-ddThh:mm:ss.zzzZ");
     QDir(resultPath).mkpath(".");
     QFile path(jobPath + "path"), input(jobPath + "input"), meta(resultPath + "meta.local");
     path.open(QFile::ReadOnly);
-    meta.open(QFile::WriteOnly);
+    meta.open(QFile::WriteOnly | QFile::Text);
     quint64 finished = QDateTime::currentMSecsSinceEpoch();
-    meta.write(QString("type: remote\nnode: [%1] \ncode: %2\nstarted: %3\nfinished: %4\n").arg(QSN(runningLocal), QString(path.readAll()), QDateTime::fromMSecsSinceEpoch(localJobStartedAt).toUTC().toString(Qt::ISODate), QDateTime::fromMSecsSinceEpoch(finished).toUTC().toString(Qt::ISODate)).toLatin1());
+    QTextStream(&meta) << QString("type: remote\nnode: [%1] \ncode: %2\nstarted: %3\nfinished: %4\n").arg(QSN(runningLocal), QString(path.readAll()), QDateTime::fromMSecsSinceEpoch(localJobStartedAt).toUTC().toString(dtFormatMeta), QDateTime::fromMSecsSinceEpoch(finished).toUTC().toString(dtFormatMeta)).toLatin1();
     if(!QFile(resultPath + "input").exists())
         input.copy(resultPath + "input");
-    log(Info, QString("Local job for [%1] has finished at: %3! [<a href=\"file:///%5\">Result folder</a>].").arg(QSN(runningLocal), QDateTime::fromMSecsSinceEpoch(finished).toString("dd-MM hh:mm:ss.zzz"), QDir::current().path() + "/" + resultPath));
+    log(Info, QString("Local job for [%1] has finished at: %2! Duration: %3s. [<a href=\"file:///%4\">Result folder</a>]").arg(QSN(runningLocal), QDateTime::fromMSecsSinceEpoch(finished).toString("dd-MM hh:mm:ss.zzz"), QSN((finished - localJobStartedAt) / 1000) + "." + QSN((finished - localJobStartedAt) % 1000), QDir::current().path() + "/" + resultPath));
     if(runLocal.size())
         runLocalJob(runLocal.takeFirst());
     else
@@ -244,6 +246,7 @@ void MainWindow::newEvent(Event* event)
             auto e = static_cast<JobFinishedEvent*>(event);
             Node* node = core->getNodeList()->at(e->index);
             QString dtFormat("dd-MM hh:mm:ss.zzz"),
+                    dtFormatMeta("yyyy-MM-ddThh:mm:ss.zzzZ"),
                     resultPath("results/" + QDateTime::fromMSecsSinceEpoch(resultTimeStamp).toString("dd.MM.yyyy_HH-mm-ss.zzz") + "/" + QSN(node->getId()) + "/");
             ui->listNodes->item(e->index)->setText(QString("[%1] %2 (%3) - %4").arg(QSN(node->getId()), node->getName(), node->getAddress(), node->getStatus()));
             {
@@ -251,14 +254,14 @@ void MainWindow::newEvent(Event* event)
                 QString jobPath("jobs/" + QSN(node->getId()) + "/");
                 QFile path(jobPath + "path"), input(jobPath + "input"), meta(resultPath + "meta"), output(resultPath + "output");
                 path.open(QFile::ReadOnly);
-                meta.open(QFile::WriteOnly);
+                meta.open(QFile::WriteOnly | QFile::Text);
                 output.open(QFile::WriteOnly);
-                meta.write(QString("type: remote\nnode: [%1] %2 (%3)\ncode: %4\nstarted: %5\nfinished: %6\n").arg(QSN(node->getId()), node->getName(), node->getAddress(), QString(path.readAll()), QDateTime::fromMSecsSinceEpoch(node->jobStartedAt).toUTC().toString(Qt::ISODate), QDateTime::fromMSecsSinceEpoch(node->jobFinishedAt).toUTC().toString(Qt::ISODate)).toLatin1());
+                QTextStream(&meta) << QString("type: remote\nnode: [%1] %2 (%3)\ncode: %4\nstarted: %5\nfinished: %6\n").arg(QSN(node->getId()), node->getName(), node->getAddress(), QString(path.readAll()), QDateTime::fromMSecsSinceEpoch(node->jobStartedAt).toUTC().toString(dtFormatMeta), QDateTime::fromMSecsSinceEpoch(node->jobFinishedAt).toUTC().toString(dtFormatMeta)).toLatin1();
                 if(!QFile(resultPath + "input").exists())
                     input.copy(resultPath + "input");
                 output.write(e->output);
             }
-            log(Info, QString("[%1] '%2' has finished the job at: %3 (remote), %4 (local)! [<a href=\"file:///%5\">Result folder</a>].").arg(QSN(node->getId()), QString(node->getName()), QDateTime::fromMSecsSinceEpoch(node->jobFinishedAt).toString(dtFormat), QDateTime::fromMSecsSinceEpoch(node->jobFinishedAtLocal).toString(dtFormat), QDir::current().path() + "/" + resultPath));
+            log(Info, QString("[%1] '%2' has finished the job at: %3 (remote), %4 (local)! Duration: %5s. [<a href=\"file:///%6\">Result folder</a>]").arg(QSN(node->getId()), QString(node->getName()), QDateTime::fromMSecsSinceEpoch(node->jobFinishedAt).toString(dtFormat), QDateTime::fromMSecsSinceEpoch(node->jobFinishedAtLocal).toString(dtFormat), QSN((node->jobFinishedAtLocal - node->jobStartedAtLocal) / 1000) + "." + QSN((node->jobFinishedAtLocal - node->jobStartedAtLocal) % 1000), QDir::current().path() + "/" + resultPath));
             if(runningLocal || runningRemote)
                 checkRunning();
             break;
